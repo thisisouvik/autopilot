@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "worker": "npx tsx worker.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

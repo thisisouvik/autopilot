@@ -1,4 +1,5 @@
 import DashboardShell from "@/components/DashboardShell";
+import EngineStatusPanel from "@/components/EngineStatusPanel";
 import { getSession } from "@/lib/session";
 import { fetchStellarBalance, formatXLM } from "@/lib/stellar";
 import { neon } from "@neondatabase/serverless";
@@ -255,6 +256,7 @@ export default async function DashboardPage() {
             </div>
           </Link>
         )}
+        <EngineStatusPanel />
       </div>
     </DashboardShell>
   );

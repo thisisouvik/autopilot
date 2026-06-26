@@ -8,7 +8,7 @@ import {
   Bot,
   ListChecks,
   Target,
-  Settings,
+  User,
   LogOut,
   Copy,
   Check,
@@ -20,8 +20,8 @@ const navItems = [
   { href: "/", icon: LayoutDashboard, label: "Home" },
   { href: "/chat", icon: Bot, label: "AutoPilot" },
   { href: "/rules", icon: ListChecks, label: "Rules" },
-  { href: "/goals", icon: Target, label: "Goals" },
-  { href: "/settings", icon: Settings, label: "Settings" },
+  { href: "/goals",   icon: Target, label: "Goals" },
+  { href: "/account", icon: User,   label: "Account" },
 ];
 
 export default function Sidebar({ publicKey }: { publicKey: string }) {
@@ -40,7 +40,7 @@ export default function Sidebar({ publicKey }: { publicKey: string }) {
 
   const handleDisconnect = async () => {
     setDisconnecting(true);
-    await fetch("/api/auth/logout", { method: "POST" });
+    await fetch("/api/account/disconnect", { method: "POST" });
     router.push("/onboarding");
   };
 

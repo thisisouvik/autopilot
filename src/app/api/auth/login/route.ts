@@ -1,5 +1,12 @@
+/**
+ * Login API route.
+ *
+ * Uses the @neondatabase/serverless neon() HTTP driver directly instead of
+ * Prisma for this route. This connects over HTTPS (port 443), not TCP port
+ * 5432, so it works regardless of IPv4/IPv6 routing or Cloudflare WARP.
+ */
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 import { signToken } from "@/lib/auth";
 
 export async function POST(request: Request) {
@@ -7,31 +14,44 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { publicKey } = body;
 
-    if (!publicKey) {
+    if (!publicKey || typeof publicKey !== "string") {
       return NextResponse.json(
         { error: "Public key is required" },
         { status: 400 }
       );
     }
 
-    // Upsert user in the database
-    // This creates the user if they don't exist, or returns them if they do
-    const user = await prisma.user.upsert({
-      where: { publicKey },
-      update: {}, // No updates needed on login
-      create: { publicKey },
-    });
+    // Connect via HTTP (not TCP port 5432)
+    const sql = neon(process.env.DATABASE_URL!);
 
-    // Create JWT session token
+    // Upsert user — create if new, return existing if not
+    const rows = await sql`
+      INSERT INTO "User" (id, "publicKey", "createdAt", "updatedAt")
+      VALUES (
+        gen_random_uuid(),
+        ${publicKey},
+        NOW(),
+        NOW()
+      )
+      ON CONFLICT ("publicKey")
+      DO UPDATE SET "updatedAt" = NOW()
+      RETURNING id, "publicKey", "createdAt"
+    `;
+
+    const user = rows[0];
+    if (!user) {
+      throw new Error("Failed to upsert user record.");
+    }
+
+    // Issue JWT
     const token = await signToken({ publicKey: user.publicKey });
 
-    // Set the token as an HTTP-only cookie
+    // Return session as HTTP-only cookie
     const response = NextResponse.json(
       { success: true, user: { publicKey: user.publicKey } },
       { status: 200 }
     );
 
-    // Cookie configuration: HTTP-only, secure in production, strict same-site
     response.cookies.set({
       name: "session",
       value: token,
@@ -39,7 +59,7 @@ export async function POST(request: Request) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/",
-      maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+      maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
     return response;
@@ -48,7 +68,7 @@ export async function POST(request: Request) {
     console.error("Login API Error:", message);
     return NextResponse.json(
       {
-        error: "Internal server error during authentication",
+        error: "Authentication failed. Please try again.",
         detail: process.env.NODE_ENV === "development" ? message : undefined,
       },
       { status: 500 }

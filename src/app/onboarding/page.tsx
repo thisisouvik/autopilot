@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { isAllowed, requestAccess, setAllowed } from "@stellar/freighter-api";
+import { isConnected, requestAccess } from "@stellar/freighter-api";
 import { Loader2, Wallet, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -26,19 +26,18 @@ export default function OnboardingPage() {
     setError(null);
 
     try {
-      // 1. Check if Freighter is installed and request access
-      let allowed = await isAllowed();
-      if (!allowed) {
-        allowed = await setAllowed();
-        if (!allowed) {
-          throw new Error("Connection rejected. Please approve to continue.");
-        }
+      // 1. Check if Freighter is installed
+      const connectedRes = await isConnected();
+      if (!connectedRes.isConnected) {
+        throw new Error("Freighter is not installed. Please install the extension first.");
       }
 
-      const publicKey = await requestAccess();
-      if (!publicKey) {
-        throw new Error("Could not retrieve public key from Freighter.");
+      // 2. Request access (this will prompt the user if not already allowed)
+      const accessRes = await requestAccess();
+      if (accessRes.error || !accessRes.address) {
+        throw new Error(accessRes.error || "Could not retrieve public key. Please approve the connection in Freighter.");
       }
+      const publicKey = accessRes.address;
 
       // 2. Call backend to authenticate
       const response = await fetch("/api/auth/login", {

@@ -14,6 +14,7 @@
     "@prisma/adapter-neon": "^7.8.0",
     "@prisma/client": "^6.19.3",
     "@stellar/freighter-api": "^6.0.1",
+    "@stellar/stellar-sdk": "^16.0.1",
     "@types/ws": "^8.18.1",
     "framer-motion": "^12.42.0",
     "jose": "^6.2.3",

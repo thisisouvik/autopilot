@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Bot,
   ListChecks,
+  Target,
   Settings,
   LogOut,
   Copy,
@@ -19,6 +20,7 @@ const navItems = [
   { href: "/", icon: LayoutDashboard, label: "Home" },
   { href: "/chat", icon: Bot, label: "AutoPilot" },
   { href: "/rules", icon: ListChecks, label: "Rules" },
+  { href: "/goals", icon: Target, label: "Goals" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 

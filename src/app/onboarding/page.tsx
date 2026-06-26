@@ -92,6 +92,7 @@ export default function OnboardingPage() {
             src="/logo.png"
             alt="AutoPilot Logo"
             fill
+            sizes="80px"
             className="object-contain"
             priority
           />

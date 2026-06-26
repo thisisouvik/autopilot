@@ -44,9 +44,13 @@ export async function POST(request: Request) {
 
     return response;
   } catch (error) {
-    console.error("Login API Error:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Login API Error:", message);
     return NextResponse.json(
-      { error: "Internal server error during authentication" },
+      {
+        error: "Internal server error during authentication",
+        detail: process.env.NODE_ENV === "development" ? message : undefined,
+      },
       { status: 500 }
     );
   }

@@ -37,11 +37,39 @@ Imagine a freelancer who gets paid sporadically in XLM or USDC on Stellar. Inste
 
 ---
 
-## 📸 Product Screenshot
+## 📸 Application Screenshots
 
-<div align="center">
-  <img src="frontend/public/dashboard.png" alt="AutoPilot Dashboard" />
-</div>
+### 1. Onboarding Screen
+![Onboarding](assets/screenshots/onboarding.png)
+*A seamless Web3 onboarding experience allowing users to connect their Freighter wallet to access the AutoPilot dashboard.*
+
+### 2. Main Dashboard
+![Home](assets/screenshots/home.png)
+*The central hub where users can track their total automated wealth, view active automation rules, and monitor recent on-chain activity.*
+
+### 3. AI Financial Coach
+![AI Coach](assets/screenshots/autopilot.coach.png)
+*Users can chat with our AI to generate financial insights and automatically construct complex savings rules in plain English.*
+
+### 4. Chat Interface
+![Chat](assets/screenshots/autopilot.chat.png)
+*An intuitive, natural language interface powered by Groq and Qwen3, enabling conversational automation rule creation.*
+
+### 5. Automation Rules
+![Rules](assets/screenshots/rules.png)
+*The control center for all active financial triggers. Users can view, pause, and delete their automated savings or investment logic.*
+
+### 6. Goal Tracking
+![Goals](assets/screenshots/goals.png)
+*Set financial milestones (e.g., Vacation, Emergency Fund) and link them to automation rules to track real-time progress.*
+
+### 7. On-Chain Vaults
+![Vault](assets/screenshots/vault.png)
+*Server-controlled Stellar accounts mapped to the user. Funds are autonomously routed here when rules execute, ready for withdrawal.*
+
+### 8. Account Settings & Limits
+![Account](assets/screenshots/account.png)
+*Manage spending limits, view full transaction history, and configure premium features to ensure safe and responsible automation.*
 
 ---
 
@@ -176,8 +204,9 @@ For hackathon judges and auditors, you can verify our deployment on the Stellar 
 ## 🧪 Testing
 
 <div align="center">
-  <img src="frontend/public/test-results.png" alt="Test Results" />
+  <img src="assets/tests/test-passed.png" alt="Test Results" />
 </div>
+*Our extensive backend testing suite successfully verifying rule creation, trigger matching, and Stellar SDK transaction building.*
 
 ### How to Test
 The project includes a comprehensive, live End-to-End (E2E) test suite that interacts with both the real database and the Stellar Testnet.

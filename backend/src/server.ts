@@ -12,6 +12,7 @@ import chatRoutes from "./routes/chat";
 import transactionsRoutes from "./routes/transactions";
 import accountRoutes from "./routes/account";
 import autopilotRoutes from "./routes/autopilot";
+import { startEngine } from "./engine/index";
 
 dotenv.config();
 
@@ -101,6 +102,21 @@ const start = async () => {
     const port = process.env.PORT ? parseInt(process.env.PORT) : 3001;
     await server.listen({ port, host: "0.0.0.0" });
     console.log(`Server listening on http://localhost:${port}`);
+
+    // Start the automation engine AFTER the HTTP server is up
+    const stopEngine = await startEngine();
+
+    // Graceful shutdown on SIGTERM (Render, Railway, Docker)
+    const shutdown = async (signal: string) => {
+      console.log(`\n[Server] ${signal} received — shutting down gracefully…`);
+      await stopEngine();
+      await server.close();
+      process.exit(0);
+    };
+
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
+    process.on("SIGINT",  () => shutdown("SIGINT"));
+
   } catch (err) {
     server.log.error(err);
     process.exit(1);

@@ -72,11 +72,13 @@ export default async function authRoutes(server: FastifyInstance) {
       { expiresIn: "7d" }
     );
 
+    const isProd = process.env.NODE_ENV === "production";
     reply.setCookie("session", token, {
       path: "/",
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: isProd,
+      // cross-domain (Vercel frontend ↔ Render backend) requires sameSite "none" + secure
+      sameSite: isProd ? "none" : "strict",
       maxAge: 60 * 60 * 24 * 7,
     });
 
@@ -88,11 +90,12 @@ export default async function authRoutes(server: FastifyInstance) {
    * Clears the session cookie.
    */
   server.post("/logout", async (request, reply) => {
+    const isProd = process.env.NODE_ENV === "production";
     reply.setCookie("session", "", {
       path: "/",
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: isProd,
+      sameSite: isProd ? "none" : "strict",
       maxAge: 0,
     });
     return reply.send({ success: true });

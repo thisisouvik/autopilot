@@ -22,9 +22,18 @@ const server = Fastify({
   trustProxy: true,
 });
 
-// Register plugins
+// Build allowed origins: always allow localhost in dev + any FRONTEND_URL set in env
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:3000",
+].filter(Boolean) as string[];
+
 server.register(cors, {
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: (origin, cb) => {
+    // Allow requests with no origin (e.g., curl, Render health checks)
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error(`CORS: origin '${origin}' not allowed`), false);
+  },
   credentials: true,
 });
 

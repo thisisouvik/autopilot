@@ -31,7 +31,7 @@ import { neon } from "@neondatabase/serverless";
 dotenv.config();
 
 const POLL_INTERVAL_MS = 30_000; // 30 seconds
-const APP_URL = process.env.WORKER_APP_URL ?? "http://localhost:3000";
+const APP_URL = process.env.WORKER_APP_URL ?? "http://localhost:3001";
 const ENGINE_SECRET = process.env.ENGINE_SECRET ?? process.env.JWT_SECRET ?? "dev-engine-secret";
 
 let iteration = 0;

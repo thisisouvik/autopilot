@@ -70,7 +70,14 @@ export default function EngineStatusPanel() {
   const fetchStatus = useCallback(async () => {
     try {
       const res = await fetch("/api/autopilot/status");
-      if (res.ok) setStatus(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        // Guard: ensure recentTransactions is always an array
+        setStatus({
+          ...data,
+          recentTransactions: Array.isArray(data.recentTransactions) ? data.recentTransactions : [],
+        });
+      }
     } catch {}
     setLoading(false);
   }, []);
@@ -84,7 +91,7 @@ export default function EngineStatusPanel() {
   const triggerNow = async () => {
     setTriggering(true);
     try {
-      const res = await fetch("/api/autopilot/monitor");
+      const res = await fetch("/api/autopilot/monitor", { method: "POST" });
       const data = await res.json();
       setLastTrigger({
         count: data.processed ?? 0,
@@ -175,7 +182,7 @@ export default function EngineStatusPanel() {
       <div className="px-5 py-3">
         {loading ? (
           <p className="text-xs text-white/25 text-center py-4">Loading…</p>
-        ) : status?.recentTransactions.length === 0 ? (
+        ) : !status || (status.recentTransactions ?? []).length === 0 ? (
           <div className="text-center py-5">
             <Zap className="w-5 h-5 text-white/15 mx-auto mb-2" />
             <p className="text-xs text-white/25">Waiting for incoming payments…</p>
@@ -185,7 +192,7 @@ export default function EngineStatusPanel() {
           </div>
         ) : (
           <div>
-            {status!.recentTransactions.map(tx => (
+            {(status.recentTransactions ?? []).map(tx => (
               <TxRow key={tx.id} tx={tx} />
             ))}
           </div>

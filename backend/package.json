@@ -9,6 +9,7 @@
     "start": "node dist/server.js",
     "test": "vitest run",
     "migrate": "tsx src/migrations/addVaultTable.ts",
+    "migrate:goal": "tsx src/migrations/addGoalTable.ts",
     "friendbot": "tsx src/scripts/friendbot.ts",
     "gen-keypair": "tsx src/scripts/genKeypair.ts"
   },

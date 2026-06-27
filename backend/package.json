@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx src/server.ts",
-    "build": "tsc",
+    "build": "tsup src/server.ts --format esm --out-dir dist --no-splitting",
     "start": "node dist/server.js",
     "test": "vitest run",
     "migrate": "tsx src/migrations/addVaultTable.ts",
@@ -22,6 +22,7 @@
     "@types/node-cron": "^3.0.11",
     "@vitest/coverage-v8": "^4.1.9",
     "ts-node": "^10.9.2",
+    "tsup": "^8.5.1",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"

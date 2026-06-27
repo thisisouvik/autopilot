@@ -22,20 +22,30 @@ import { PAYMENT_QUEUE_NAME, PaymentJobData, CronJobData, CRON_QUEUE_NAME, getCo
 function doesPaymentMatchTrigger(trigger: string, asset: string): boolean {
   const t = trigger.toLowerCase();
   const isXLM = asset === "XLM";
-  return (
+
+  // Broad match — catches AI-generated trigger phrases like:
+  // "when I receive XLM", "on any incoming payment", "salary received", etc.
+  const matchesTrigger =
     t.includes("every payment") ||
     t.includes("payment received") ||
+    t.includes("payment") ||
     t.includes("receive") ||
+    t.includes("received") ||
     t.includes("incoming") ||
-    t.includes("deposit")
-  ) && isXLM;
+    t.includes("deposit") ||
+    t.includes("salary") ||
+    t.includes("income") ||
+    t.includes("transfer") ||
+    t.includes("xlm");
+
+  return matchesTrigger && isXLM;
 }
 
 async function processPaymentJob(job: Job<PaymentJobData>) {
   const { userId, publicKey, paymentHorizonId, amount, asset } = job.data;
   const sql = getDb();
 
-  console.log(`[Processor] ⚡ Job ${job.id} — payment ${paymentHorizonId.slice(0, 16)}… for ${publicKey.slice(0, 8)}…`);
+  console.log(`[Processor] ⚡ Job ${job.id} — ${amount} ${asset} for ${publicKey.slice(0, 8)}…`);
 
   // ── Step 1: Check for duplicate processing
   const existing = await sql`
@@ -63,24 +73,42 @@ async function processPaymentJob(job: Job<PaymentJobData>) {
     return { skipped: true, reason: "user_not_found" };
   }
 
+  console.log(`[Processor] 📋 Found ${rules.length} active rule(s) for user ${userId.slice(0, 8)}…`);
+
+  if (rules.length === 0) {
+    console.log(`[Processor] ℹ No active rules — nothing to do`);
+    return { skipped: true, reason: "no_rules" };
+  }
+
   const user = userRows[0];
   const dailyLimit = user.dailyLimit ? parseFloat(user.dailyLimit) : null;
   const weeklyLimit = user.weeklyLimit ? parseFloat(user.weeklyLimit) : null;
   const paymentAmountXLM = parseFloat(amount);
 
+  // ── Step 3: Fetch user's vaults for routing
+  const vaults = await sql`
+    SELECT type, "publicKey", "encryptedSecret" FROM "Vault"
+    WHERE "userId" = ${userId}::uuid
+  `;
+  const savingsVault  = vaults.find((v: any) => v.type === "savings");
+  const investVault   = vaults.find((v: any) => v.type === "investment");
+
   const results: any[] = [];
 
-  // ── Step 3: Match + execute each matching rule
+  // ── Step 4: Match + execute each matching rule
   for (const rule of rules) {
-    if (!doesPaymentMatchTrigger(rule.trigger as string, asset)) continue;
+    const triggerMatches = doesPaymentMatchTrigger(rule.trigger as string, asset);
+    console.log(`[Processor] 🔍 Rule "${rule.trigger}" | matches: ${triggerMatches}`);
+    if (!triggerMatches) continue;
 
     // ── Calculate execution amount
     const execAmount = (rule.isPercentage as boolean)
       ? (parseFloat(rule.amount) / 100) * paymentAmountXLM
       : parseFloat(rule.amount);
 
-    // Guard: amount must be positive and not exceed payment
-    if (execAmount <= 0.0000001) continue;
+    console.log(`[Processor] 💰 Exec amount: ${execAmount} XLM (${rule.isPercentage ? `${rule.amount}%` : "flat"} of ${paymentAmountXLM})`);
+
+    if (execAmount <= 0.0000001) { console.log("[Processor] ⚠ Exec amount too small — skipping"); continue; }
     if (execAmount > paymentAmountXLM) {
       console.log(`[Processor] ⚠ Rule ${rule.id} amount ${execAmount} > payment ${paymentAmountXLM} — skipping`);
       continue;
@@ -88,7 +116,7 @@ async function processPaymentJob(job: Job<PaymentJobData>) {
 
     const execAmountStr = execAmount.toFixed(7);
 
-    // ── Step 4: Spending limit check (Redis)
+    // ── Step 5: Spending limit check (Redis)
     const { allowed, reason } = await checkSpendingLimit(userId, execAmount, dailyLimit, weeklyLimit);
     if (!allowed) {
       console.log(`[Processor] 🚫 Limit guard blocked rule ${rule.id}: ${reason}`);
@@ -96,38 +124,54 @@ async function processPaymentJob(job: Job<PaymentJobData>) {
       continue;
     }
 
-    // ── Step 5: Build + submit Stellar transaction
-    const destination = process.env.AUTOPILOT_PUBLIC_KEY!;
-    const memo = (rule.memo as string | null) ?? `AutoPilot:${rule.action}:${execAmountStr}`.slice(0, 28);
+    // ── Step 6: Determine destination based on rule action
+    const action = (rule.action as string).toLowerCase();
+    let destination: string | null = null;
+
+    if (action.includes("save") || action.includes("saving")) {
+      destination = savingsVault?.publicKey ?? null;
+    } else if (action.includes("invest") || action.includes("investment")) {
+      destination = investVault?.publicKey ?? null;
+    }
+
+    // Fallback: if no vault exists, route to engine account and log
+    if (!destination) {
+      console.warn(`[Processor] ⚠ No ${action} vault found for user — routing to engine account`);
+      destination = process.env.AUTOPILOT_PUBLIC_KEY!;
+    }
+
+    const memo = (rule.memo as string | null) ?? `AutoPilot:${action}:${execAmountStr}`.slice(0, 28);
+
+    console.log(`[Processor] 🚀 Sending ${execAmountStr} XLM → ${destination.slice(0, 8)}… (${action})`);
 
     try {
       const txHash = await executeRuleTransaction(destination, execAmountStr, memo);
 
-      // ── Step 6: Record in DB
+      // ── Step 7: Record in DB
       await sql`
         INSERT INTO "AutomatedTransaction"
           (id, "userId", "ruleId", amount, type, memo, "txHash", "createdAt")
         VALUES
           (gen_random_uuid(), ${userId}::uuid, ${rule.id}::uuid,
-           ${execAmount}, ${(rule.action as string).toLowerCase()},
-           ${memo}, ${paymentHorizonId}, NOW())
+           ${execAmount}, ${action},
+           ${memo}, ${txHash}, NOW())
       `;
 
-      // ── Step 7: Update Redis spend counters
+      // ── Step 8: Update Redis spend counters
       await recordSpend(userId, execAmount);
 
-      console.log(`[Processor] ✅ Rule "${rule.action}" | ${execAmountStr} XLM | tx: ${txHash.slice(0, 20)}…`);
-      results.push({ ruleId: rule.id, status: "executed", txHash, amount: execAmountStr });
+      console.log(`[Processor] ✅ Rule "${rule.action}" | ${execAmountStr} XLM → vault | tx: ${txHash.slice(0, 20)}…`);
+      results.push({ ruleId: rule.id, status: "executed", txHash, amount: execAmountStr, destination });
 
     } catch (txErr: any) {
       console.error(`[Processor] ✗ Tx failed for rule ${rule.id}:`, txErr?.message ?? txErr);
       results.push({ ruleId: rule.id, status: "failed", error: txErr?.message });
-      // Don't throw — we want to process remaining rules even if one fails
     }
   }
 
   return { processed: results.length, results };
 }
+
 
 async function processCronJob(job: Job<CronJobData>) {
   const { userId, ruleId, amount, isPercentage, action, memo } = job.data;

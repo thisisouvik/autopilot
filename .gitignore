@@ -44,9 +44,9 @@ node_modules/
 
 # ── Environment Variables ────────────────────────────────────
 # NEVER commit secrets or API keys
-.env
-.env.*
-!.env.example
+*.env
+*.env.*
+*!.env.example
 
 # ── Build Outputs ────────────────────────────────────────────
 dist/

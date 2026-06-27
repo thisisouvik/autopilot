@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "tsx src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "migrate": "tsx src/migrations/addVaultTable.ts",
+    "friendbot": "tsx src/scripts/friendbot.ts",
+    "gen-keypair": "tsx src/scripts/genKeypair.ts"
   },
   "keywords": [],
   "author": "",

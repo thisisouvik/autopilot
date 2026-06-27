@@ -13,7 +13,7 @@
  *   - Resumes from the last saved cursor on restart
  */
 
-import { horizonServer } from "../lib/engine";
+import { getHorizon } from "../stellar/horizon";
 import { saveHorizonCursor, getHorizonCursor } from "../lib/redis";
 import { getPaymentQueue, PaymentJobData } from "./queue";
 import { getDb } from "../lib/db";
@@ -38,7 +38,7 @@ async function openStream(userId: string, publicKey: string) {
 
   try {
     // stellar-sdk stream returns a close function
-    const closeFn = horizonServer
+    const closeFn = getHorizon()
       .payments()
       .forAccount(publicKey)
       .cursor(cursor)

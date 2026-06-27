@@ -8,6 +8,7 @@ import {
   Bot,
   ListChecks,
   Target,
+  Vault,
   User,
   LogOut,
   Copy,
@@ -17,11 +18,12 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
-  { href: "/", icon: LayoutDashboard, label: "Home" },
-  { href: "/chat", icon: Bot, label: "AutoPilot" },
-  { href: "/rules", icon: ListChecks, label: "Rules" },
-  { href: "/goals",   icon: Target, label: "Goals" },
-  { href: "/account", icon: User,   label: "Account" },
+  { href: "/",        icon: LayoutDashboard, label: "Home" },
+  { href: "/chat",    icon: Bot,             label: "AutoPilot" },
+  { href: "/rules",   icon: ListChecks,      label: "Rules" },
+  { href: "/goals",   icon: Target,          label: "Goals" },
+  { href: "/vault",   icon: Vault,           label: "Vault" },
+  { href: "/account", icon: User,            label: "Account" },
 ];
 
 export default function Sidebar({ publicKey }: { publicKey: string }) {

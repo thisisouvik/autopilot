@@ -1,7 +1,8 @@
 import { FastifyInstance } from "fastify";
 import { verifyAuth } from "../middleware/auth";
 import { getDb } from "../lib/db";
-import { fetchRecentPayments, executeRuleTransaction, isPaymentAlreadyProcessed, horizonServer } from "../lib/engine";
+import { fetchRecentPayments, executeRuleTransaction, isPaymentAlreadyProcessed } from "../lib/engine";
+import { getHorizon } from "../stellar/horizon";
 
 export default async function autopilotRoutes(server: FastifyInstance) {
   
@@ -20,7 +21,7 @@ export default async function autopilotRoutes(server: FastifyInstance) {
         SELECT COUNT(*) as count FROM "Rule"
         WHERE "userId" = ${request.user!.id}::uuid AND status = 'active'
       `,
-      horizonServer
+      getHorizon()
         .accounts()
         .accountId(process.env.AUTOPILOT_PUBLIC_KEY!)
         .call()

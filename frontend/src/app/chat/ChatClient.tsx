@@ -59,9 +59,13 @@ const SUGGESTIONS = [
 function buildInsights(rules: Rule[]): InsightCard[] {
   const cards: InsightCard[] = [];
 
-  const saveRules = rules.filter(r => r.action === "Save" && r.status === "active");
-  const investRules = rules.filter(r => r.action === "Invest" && r.status === "active");
-  const pausedRules = rules.filter(r => r.status === "paused");
+  // Guard: drop any null/undefined items before reading their properties
+  const safe = (rules ?? []).filter((r) => r != null && r.action != null);
+
+  const saveRules   = safe.filter(r => r.action === "Save"   && r.status === "active");
+  const investRules = safe.filter(r => r.action === "Invest" && r.status === "active");
+  const pausedRules = safe.filter(r => r.status === "paused");
+
 
   if (saveRules.length > 0) {
     cards.push({

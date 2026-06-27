@@ -1,502 +1,252 @@
-# AutoPilot
+<div align="center">
+  <img src="frontend/public/logo.png" alt="AutoPilot Logo" width="150" />
+  <h1>AutoPilot</h1>
+  <p>AI-Powered Financial Automation on the Stellar Network</p>
 
-## The AI-Powered Financial Operating System for Stellar
+  <p>
+    <img src="https://img.shields.io/badge/Next.js-black?style=flat&logo=next.js&logoColor=white" alt="Next.js" />
+    <img src="https://img.shields.io/badge/Fastify-000000?style=flat&logo=fastify&logoColor=white" alt="Fastify" />
+    <img src="https://img.shields.io/badge/Stellar-000000?style=flat&logo=stellar&logoColor=white" alt="Stellar" />
+    <img src="https://img.shields.io/badge/PostgreSQL-316192?style=flat&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat&logo=tailwind-css&logoColor=white" alt="Tailwind" />
+    <img src="https://img.shields.io/badge/Groq-black?style=flat" alt="Groq AI" />
+  </p>
+</div>
 
----
-
-Managing money is still surprisingly manual.
-
-Every month, people receive payments, save money, invest funds, pay bills, and manage financial goals. Yet most of these actions require constant human intervention. People know they should save, invest, and budget better—but life gets busy, and financial discipline becomes difficult.
-
-AutoPilot changes that.
-
-AutoPilot is an AI-powered financial automation platform built on Stellar that allows users to manage money using simple conversations. Instead of manually moving funds, users create intelligent financial rules in natural language:
-
-> "Save 10% of every payment I receive."
-
-> "Invest 5 USDC every Monday."
-
-> "Keep at least 200 USDC available and invest the rest."
-
-The platform automatically executes these actions using Stellar's fast and low-cost infrastructure.
-
-Think of AutoPilot as:
-
-**ChatGPT + Zapier + Wealthfront + Stellar**
-
-A future where money manages itself.
+<div align="center">
+  <h3><strong><a href="https://autopilot-stellar.vercel.app">🚀 Live Deployment</a></strong> | <strong><a href="#">📺 Video Demo</a></strong></h3>
+</div>
 
 ---
 
-# The Problem: Money Requires Too Much Manual Effort
+## 💡 The Problem & Solution
 
-## The Reality of Everyday Finance
+### The Problem
+Managing personal finances, specifically consistently saving and investing, is a manual, emotional, and often forgotten task. Traditional banking apps offer basic "auto-transfers" but lack dynamic intelligence (e.g., "save 10% only if I receive a payment over $50").
 
-Meet Rahul.
+### The Solution
+**AutoPilot** bridges natural language AI with the speed and low cost of the Stellar blockchain. Users simply tell the AI what they want to do (e.g., "Save 10% of all incoming payments"), and the AutoPilot engine constantly monitors their Stellar wallet, executing those rules autonomously and instantly.
 
-Rahul is a 23-year-old freelance designer.
+### Real-World Application
+Imagine a freelancer who gets paid sporadically in XLM or USDC on Stellar. Instead of manually moving money to a savings account every time they get paid, AutoPilot automatically calculates 15% of that specific payment and instantly sweeps it into a secure, encrypted "Vault" account on the blockchain. 
 
-Every month he receives payments from multiple clients.
-
-His goal is simple:
-
-* Save money
-* Build an emergency fund
-* Invest consistently
-
-But reality looks different.
-
-Every time he receives a payment, he tells himself:
-
-> "I'll move some money to savings later."
-
-Later never comes.
-
-At the end of the month:
-
-* Savings = 0
-* Investments = 0
-* Financial goals delayed again
-
-Rahul isn't irresponsible.
-
-He's human.
-
-Millions of people struggle with financial discipline because money management is still manual.
+### Revenue Generation (Business Model)
+* **Freemium Model:** Users get 2 active rules for free.
+* **Pro Tier:** Subscription fee (e.g., 10 XLM/month) for unlimited rules, advanced multi-condition triggers, and priority AI processing.
+* **Volume Fees:** A micro-fee (e.g., 0.01 XLM) charged on automated investment routing.
 
 ---
 
-## Why Existing Solutions Fail
+## 📸 Product Screenshot
 
-Traditional finance apps provide information.
-
-They don't take action.
-
-Budgeting apps tell users:
-
-* How much they spent
-* Where they spent it
-* What they should do
-
-But the user must still execute everything manually.
-
-Financial success depends on consistency.
-
-Consistency is where most people fail.
-
-The world needs a financial system that doesn't just advise people.
-
-It acts on their behalf.
+<div align="center">
+  <img src="frontend/public/dashboard.png" alt="AutoPilot Dashboard" />
+</div>
 
 ---
 
-# The Solution: AutoPilot on Stellar
+## 🛠️ Tech Stack
 
-AutoPilot transforms financial goals into automated actions.
-
-Users describe what they want.
-
-The AI creates financial automation rules.
-
-The system executes them automatically.
-
----
-
-# Example User Journey
-
-Rahul joins AutoPilot.
-
-He creates a simple rule:
-
-> "Save 10% of every payment I receive."
-
-A few days later:
-
-Payment Received:
-
-$100
-
-AutoPilot automatically:
-
-* Moves $10 into Savings
-* Leaves $90 available
-
-Rahul saved money without thinking about it.
-
-Months later, he has built an emergency fund automatically.
+| Category | Technology | Description |
+| :--- | :--- | :--- |
+| **Frontend** | Next.js (React), Tailwind CSS | Fast, responsive, and beautiful user interface. |
+| **Backend** | Fastify (Node.js) | High-performance API server for handling requests and webhooks. |
+| **Database** | Neon (PostgreSQL) | Serverless SQL database storing user profiles, encrypted vault keys, and rule logic. |
+| **Blockchain** | Stellar SDK, Horizon API | Interacting with the Stellar network, creating accounts, and submitting transactions. |
+| **AI Engine** | Groq (Llama-3.3-70b) | Lightning-fast LLM used to parse natural language into structured JSON financial rules. |
+| **Security** | AES-256-GCM, JWT | Bank-grade encryption for Vault private keys; secure session management. |
 
 ---
 
-# How It Works
+## ⛓️ Blockchain Details for Judges
 
-## Step 1: Connect Wallet
+AutoPilot utilizes the Stellar Network's native features to create a seamless, non-custodial-feeling automation experience. 
 
-Users connect a Stellar wallet.
+**Note on Smart Contracts:** 
+This project leverages Stellar's highly efficient native operations (Account Creation, Payment, Trustlines) orchestrated by a centralized off-chain engine, rather than Soroban smart contracts. This allows for complex AI integration and gas-less user experiences.
 
-Supported wallets include:
-
-* Freighter
-* Lobstr
-* Albedo
-
-No private keys are shared.
-
-Users remain in full control of their assets.
+* **The Engine Account:** The backend maintains a funded "Engine" account (`AUTOPILOT_PUBLIC_KEY`). This account acts as the orchestrator.
+* **Vault Creation:** When a user creates a "Savings Vault" in the UI, the backend generates a *brand new* Stellar Keypair. The Engine account submits a `createAccount` transaction to the network, funding the new Vault with the base reserve (2.5 XLM). 
+* **Security:** The Vault's private key is encrypted using `AES-256-GCM` before being stored in the PostgreSQL database. The application only decrypts it in memory when an automated transaction needs to be signed.
+* **Transaction Execution:** A background cron job monitors the user's main public key via the Horizon API. When a trigger condition is met, the backend signs and submits a transaction moving funds to the respective Vault.
 
 ---
 
-## Step 2: Create Financial Goals
+## 📂 File Architecture
 
-Users simply chat with AutoPilot.
-
-Examples:
-
-> Save $5 every day
-
-> Invest 20% of incoming payments
-
-> Keep $200 available for emergencies
-
-> Move idle funds to the highest yield vault
-
----
-
-## Step 3: AI Creates Automation Rules
-
-The AI converts human instructions into programmable financial actions.
-
-Example:
-
-User:
-
-> Save 15% of every payment.
-
-Generated Rule:
-
-```json
-{
-  "trigger":"incoming_payment",
-  "action":"save",
-  "amount":"15%"
-}
+```text
+autopilot/
+├── backend/                   # Node.js Fastify API server
+│   └── src/                   # Backend source code
+│       ├── engine/            # Background automation execution logic
+│       ├── lib/               # Database and utility functions
+│       ├── middleware/        # JWT auth and security guards
+│       ├── migrations/        # PostgreSQL schema setup scripts
+│       ├── routes/            # API endpoints (goals, rules, chat)
+│       ├── scripts/           # Testing and CLI setup tools
+│       ├── stellar/           # Horizon API blockchain integration
+│       └── server.ts          # Main Fastify server entry point
+└── frontend/                  # Next.js React web application
+    └── src/                   # Frontend source code
+        ├── app/               # Next.js App Router pages
+        │   ├── chat/          # AI Coach interface & logic
+        │   ├── goals/         # Financial goal tracking UI
+        │   └── onboarding/    # First-time user wallet setup
+        └── components/        # Reusable React UI elements
 ```
 
-No coding required.
+---
 
-No financial expertise required.
+## 🏗️ Project Architecture
+
+```mermaid
+flowchart LR
+    UI[Next.js Frontend] <-->|REST API / JWT| API[Fastify Backend]
+    
+    subgraph AutoPilot Backend
+    API <--> AI[Groq AI Engine]
+    API <--> DB[(Neon PostgreSQL)]
+    DB --> Engine[Cron Worker / Engine]
+    end
+    
+    Engine <-->|Stellar SDK| Horizon[Stellar Horizon API]
+    Horizon <--> Blockchain[(Stellar Testnet)]
+```
 
 ---
 
-## Step 4: Automatic Execution
+## 👤 User Side Flow
 
-When trigger conditions are met:
+```mermaid
+sequenceDiagram
+    participant User
+    participant AI Coach
+    participant Engine
+    participant Stellar Network
 
-* Payment arrives
-* Date condition occurs
-* Yield threshold changes
-* Goal milestone is reached
-
-AutoPilot executes transactions automatically using Stellar.
-
----
-
-# Core Features
-
-## Smart Savings
-
-Automatically save money based on user-defined rules.
-
-Examples:
-
-* Save after every income
-* Daily savings
-* Weekly savings
-* Goal-based savings
+    User->>AI Coach: "Save 10% of incoming payments"
+    AI Coach-->>Engine: Generate JSON Rule (Trigger: Incoming, Action: Save, 10%)
+    Engine->>Engine: Save Rule to Database
+    
+    Note over Stellar Network, Engine: Sometime later...
+    Stellar Network-->>Engine: Event: User received 100 XLM
+    Engine->>Engine: Check Rules -> Match Found!
+    Engine->>Engine: Calculate: 10% of 100 = 10 XLM
+    Engine->>Stellar Network: Sign & Submit Tx: Transfer 10 XLM to Vault
+    Stellar Network-->>User: Vault Balance Increased!
+```
 
 ---
 
-## Recurring Investments
+## ✨ Features
 
-Automatically invest fixed amounts.
-
-Examples:
-
-* Invest $2 daily
-* Invest every Sunday
-* Invest 10% of income
-
----
-
-## Round-Up Savings
-
-Every transaction contributes to savings.
-
-Example:
-
-Spend:
-
-$8.40
-
-AutoPilot rounds up:
-
-$0.60 → Savings Vault
+| Feature | Description |
+| :--- | :--- |
+| **Natural Language Rules** | Users type what they want in plain English, and the AI translates it into executable financial code. |
+| **Automated Vaults** | Instant, on-chain creation of isolated Stellar accounts for savings and investments. |
+| **Live Blockchain Monitoring** | The engine watches the user's account via the Horizon API to trigger rules the moment payments occur. |
+| **AES-256 Encryption** | Vault private keys are encrypted at rest; the system is secure by design. |
+| **Goal Tracking** | Users can set financial goals (e.g., "New MacBook") and link them to AI savings rules for automatic progress tracking. |
+| **Dynamic Dashboard** | Real-time fetching of Stellar balances and recent automated activity. |
 
 ---
 
-## Goal-Based Planning
+## 📜 Blockchain Deployment & Verification
 
-Users define goals.
+For hackathon judges and auditors, you can verify our deployment on the Stellar Testnet using the following credentials. Since AutoPilot relies heavily on native Stellar operations orchestrating off-chain AI, the primary engine account serves as our deployment anchor.
 
-Examples:
-
-* New Laptop
-* Vacation
-* Emergency Fund
-
-AI calculates required contributions automatically.
+| Component | Identifier / Hash | Verification Link |
+| :--- | :--- | :--- |
+| **Contract ID / Engine Account** | `GBUQJORY2GBXU2Z3HUJJJEYO5SQCKCVM5YWTHIKNV7URUAPTOPFKKHLQ` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/account/GBUQJORY2GBXU2Z3HUJJJEYO5SQCKCVM5YWTHIKNV7URUAPTOPFKKHLQ) |
+| **Deployment Transaction Hash** | `9136e5e8e74defb1a1e806d0ebf6b4ebc1041de8b9f77093baf1145352c6280d` | [View Tx on Stellar Expert](https://stellar.expert/explorer/testnet/tx/9136e5e8e74defb1a1e806d0ebf6b4ebc1041de8b9f77093baf1145352c6280d) |
 
 ---
 
-## AI Financial Coach
+## 🛑 Error Handling
 
-Users can ask:
-
-> How am I doing financially?
-
-AutoPilot provides:
-
-* Savings rate
-* Spending trends
-* Goal progress
-* Financial recommendations
+| Scenario | How AutoPilot Handles It |
+| :--- | :--- |
+| **AI Misunderstanding** | If the Llama model cannot parse the intent, the Fastify backend catches the schema error and asks the user to rephrase. |
+| **Database Connection Loss** | Serverless Neon DB connection drops are caught gracefully, displaying a friendly UI message instead of crashing the app. |
+| **Stellar Network Timeout** | Transactions submitted to Horizon have built-in timeout parameters and catch blocks to log failures and prevent retry-loops. |
+| **Insufficient Engine Funds** | If the AutoPilot Engine account cannot fund a new Vault, the API returns a 500 error, which the frontend safely parses and alerts the user to fund the engine. |
 
 ---
 
-# Technical Architecture
+## 🧪 Testing
 
-## Layer 1: Frontend
+<div align="center">
+  <img src="frontend/public/test-results.png" alt="Test Results" />
+</div>
 
-Built using:
+### How to Test
+The project includes a comprehensive, live End-to-End (E2E) test suite that interacts with both the real database and the Stellar Testnet.
 
-* Next.js
-* React
-* TailwindCSS
+1. Navigate to the backend directory: `cd backend`
+2. Run the E2E script: `npx tsx src/scripts/e2e.ts`
 
-Users manage finances through a conversational dashboard.
-
----
-
-## Layer 2: Intelligence Layer
-
-Open-source AI models:
-
-* Qwen 3
-* Llama 3
-* Gemma
-
-Powered through Ollama.
-
-The AI:
-
-* Understands goals
-* Creates automations
-* Generates insights
-* Monitors progress
+### Results
+The E2E script simulates a full user lifecycle:
+1. Creates a mock user in PostgreSQL.
+2. Creates a rule and a goal.
+3. Pings the Groq API to verify AI parsing is operational.
+4. Uses the Stellar SDK to dynamically create and fund a Vault on the testnet.
+5. Verifies database state and automatically cleans up mock data.
 
 ---
 
-## Layer 3: Automation Engine
+## 🚀 Setup Guide
 
-The core of AutoPilot.
+### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd autopilot
+```
 
-Responsible for:
+### 2. Backend Setup
+```bash
+cd backend
+npm install
+```
+Create a `.env` file in the `backend` directory with the following:
+```env
+DATABASE_URL="your-neon-postgres-url"
+JWT_SECRET="a-very-long-random-string"
+ENCRYPTION_KEY="a-32-character-random-string-for-aes"
+GROQ_API_KEY="your-groq-api-key"
+AUTOPILOT_PUBLIC_KEY="your-stellar-engine-public-key"
+AUTOPILOT_PRIVATE_KEY="your-stellar-engine-private-key"
+```
+Fund your engine account on the testnet (if using a new keypair):
+```bash
+npm run friendbot
+```
+Start the backend server:
+```bash
+npm run dev
+```
 
-* Trigger detection
-* Rule execution
-* Transaction validation
-* Event processing
+### 3. Frontend Setup
+In a new terminal:
+```bash
+cd frontend
+npm install
+```
+Create a `.env.local` file in the `frontend` directory:
+```env
+NEXT_PUBLIC_API_URL="http://localhost:3001/api"
+```
+Start the frontend development server:
+```bash
+npm run dev
+```
 
----
-
-## Layer 4: Blockchain Layer
-
-Built on Stellar.
-
-Uses:
-
-* Horizon API
-* Soroban Smart Contracts
-* Stellar USDC
-* XLM
-
-Every automation is transparent and verifiable.
-
----
-
-# Security: Four Layers of Protection
-
-## Layer 1: User Authorization
-
-Users explicitly approve automation permissions.
-
-Nothing happens without consent.
-
----
-
-## Layer 2: Spending Limits
-
-Users define limits.
-
-Examples:
-
-* Maximum $5/day
-* Maximum $50/week
-
-The AI cannot exceed approved limits.
-
----
-
-## Layer 3: Smart Vault Architecture
-
-Funds are managed through secure vaults.
-
-Assets remain protected even if automation rules fail.
+Visit `http://localhost:3000` to interact with AutoPilot!
 
 ---
 
-## Layer 4: On-Chain Transparency
+## 🙏 Thank You!
 
-Every execution is recorded on Stellar.
+Thanks for checking out AutoPilot! We built this to demonstrate the power of combining modern AI with the speed of the Stellar network. 
 
-Every transaction can be independently verified.
-
-Nothing is hidden.
-
----
-
-# Real World Deployment
-
-## Testnet Validation
-
-Phase 1 includes:
-
-* 50 active users
-* Automated savings rules
-* Automated investment rules
-* Testnet transaction tracking
-
-All actions are recorded on-chain.
-
----
-
-## Mainnet Launch
-
-Phase 2 includes:
-
-* 20 real users
-* Live Stellar transactions
-* Real stablecoin usage
-* Real automation execution
-
-Every transaction hash can be demonstrated to judges and stakeholders.
-
----
-
-# Why Stellar?
-
-AutoPilot requires:
-
-* Fast transactions
-* Low fees
-* Global accessibility
-* Stablecoin support
-
-Stellar provides all four.
-
-A user can automate financial actions for fractions of a cent.
-
-This makes micro-automation economically viable.
-
----
-
-# Business Model
-
-## Automation Fees
-
-Every automated action:
-
-$0.001
-
-Powered through x402 micropayments.
-
----
-
-## Premium Automations
-
-Free Tier:
-
-* 3 active automations
-
-Premium Tier:
-
-* Unlimited automations
-* Advanced AI features
-* Financial forecasting
-
----
-
-## Yield Revenue Sharing
-
-Users can opt into automated yield strategies.
-
-AutoPilot retains a small percentage of generated yield.
-
----
-
-# Scalability
-
-AutoPilot is designed as cloud-native infrastructure.
-
-Built using:
-
-* Docker
-* PostgreSQL
-* Node.js
-* Stellar
-* Open-source AI
-
-The same deployment can run:
-
-* Locally
-* VPS
-* Cloud Infrastructure
-* Enterprise Environments
-
-The architecture supports thousands of automated financial actions daily.
-
----
-
-# The Vision
-
-Today, people manage money manually.
-
-Tomorrow, money will manage itself.
-
-AutoPilot represents a future where:
-
-* Saving is automatic
-* Investing is automatic
-* Budgeting is automatic
-* Financial discipline becomes effortless
-
-Just as autopilot transformed aviation, AutoPilot will transform personal finance.
-
-We're not building another finance app.
-
-We're building the Financial Operating System of the AI era.
-
-A future where every Stellar wallet comes with an intelligent financial agent.
-
-A future where users don't manage money.
-
-Money manages itself.
+If you found this project interesting or helpful, **please consider giving it a ⭐ on GitHub!**

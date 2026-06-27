@@ -137,19 +137,44 @@ export default function DashboardPage() {
           return;
         }
 
-        const account = await accountRes.json();
-        const txData = txRes.ok ? await txRes.json() : [];
-        const rulesData = rulesRes.ok ? await rulesRes.json() : [];
+        // Safe JSON parse — avoids crash when server returns a 500 HTML body
+        const safeJson = async (res: Response) => {
+          if (!res.ok) return null;
+          try { return await res.json(); } catch { return null; }
+        };
 
-        setPublicKey(account.publicKey ?? "");
-        setActiveRules(account.activeRules ?? rulesData.length ?? 0);
+        const account  = await safeJson(accountRes);
+        const txData   = await safeJson(txRes);
+        const rulesData = await safeJson(rulesRes);
+
+        if (!account) return; // not logged in / server error
+
+        const userPublicKey = account.publicKey ?? "";
+        setPublicKey(userPublicKey);
+        setActiveRules(account.activeRules ?? (Array.isArray(rulesData) ? rulesData.length : 0));
         setTxRows(Array.isArray(txData) ? txData.slice(0, 10) : []);
 
-        // Fetch live Stellar balance
-        const balRes = await fetch(`/api/autopilot/status`);
-        if (balRes.ok) {
-          const bal = await balRes.json();
-          setXlmBalance(bal.engineBalance ?? "0");
+        // Fetch the USER's own live Stellar balance from Horizon
+        if (userPublicKey) {
+          try {
+            const horizonRes = await fetch(
+              `https://horizon-testnet.stellar.org/accounts/${userPublicKey}`
+            );
+            if (horizonRes.ok) {
+              const horizonData = await horizonRes.json();
+              const native = (horizonData.balances ?? []).find(
+                (b: any) => b.asset_type === "native"
+              );
+              setXlmBalance(native?.balance ?? "0");
+              setIsUnfunded(false);
+            } else {
+              // 404 = account not funded yet on testnet
+              setXlmBalance("0");
+              setIsUnfunded(true);
+            }
+          } catch {
+            setXlmBalance("0");
+          }
         }
       } catch (err) {
         console.error("Dashboard load error:", err);
@@ -159,7 +184,12 @@ export default function DashboardPage() {
     }
 
     loadDashboard();
+
+    // Auto-refresh every 30 seconds so balance and activity stay live
+    const interval = setInterval(loadDashboard, 30_000);
+    return () => clearInterval(interval);
   }, [router]);
+
 
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);

@@ -29,7 +29,7 @@ interface Rule {
 
 // ── AI ETA calc ───────────────────────────────────────────────────────────────
 function calcETA(goal: Goal, rules: Rule[]): string {
-  const remaining = goal.targetAmount - goal.currentAmount;
+  const remaining = (goal.targetAmount ?? 0) - (goal.currentAmount ?? 0);
   if (remaining <= 0) return "Completed! 🎉";
 
   const linked = rules.find(r => r.id === goal.linkedRuleId);
@@ -85,7 +85,9 @@ function GoalCard({
 }) {
   const [showLinkPanel, setShowLinkPanel] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const pct = Math.min(Math.round((goal.currentAmount / goal.targetAmount) * 100), 100);
+  const cur = goal.currentAmount ?? 0;
+  const tgt = goal.targetAmount ?? 1;
+  const pct = Math.min(Math.round((cur / tgt) * 100), 100);
   const eta = calcETA(goal, rules);
   const linked = rules.find(r => r.id === goal.linkedRuleId);
   const isDone = pct >= 100;
@@ -118,7 +120,7 @@ function GoalCard({
             <div>
               <p className="font-semibold text-white/90 text-base leading-tight">{goal.name}</p>
               <p className="text-xs text-white/30 mt-0.5">
-                {goal.currentAmount.toFixed(2)} / {goal.targetAmount.toFixed(2)} XLM
+                {(goal.currentAmount ?? 0).toFixed(2)} / {(goal.targetAmount ?? 0).toFixed(2)} XLM
               </p>
             </div>
           </div>
@@ -135,7 +137,7 @@ function GoalCard({
         </div>
 
         {/* Progress */}
-        <ProgressBar value={goal.currentAmount} max={goal.targetAmount} />
+        <ProgressBar value={goal.currentAmount ?? 0} max={goal.targetAmount ?? 1} />
         <div className="flex items-center justify-between mt-2">
           <span className="text-xs text-white/40">{pct}% complete</span>
           <span className="text-xs text-white/40 flex items-center gap-1">
@@ -321,7 +323,11 @@ export default function GoalsClient({
   initialGoals: Goal[];
   rules: Rule[];
 }) {
-  const [goals, setGoals] = useState<Goal[]>(initialGoals);
+  // Filter out any undefined/null items that may slip through from the DB
+  const safeInitial = (initialGoals ?? []).filter(
+    (g) => g != null && g.id != null
+  );
+  const [goals, setGoals] = useState<Goal[]>(safeInitial);
   const [showNew, setShowNew] = useState(false);
 
   const handleCreate = (goal: Goal) => setGoals(prev => [goal, ...prev]);
@@ -330,7 +336,7 @@ export default function GoalsClient({
     setGoals(prev => prev.map(g => g.id === goalId ? { ...g, linkedRuleId: ruleId } : g));
   };
 
-  const completed = goals.filter(g => g.currentAmount >= g.targetAmount).length;
+  const completed = goals.filter(g => (g.currentAmount ?? 0) >= (g.targetAmount ?? 1)).length;
 
   return (
     <div className="px-6 py-8 max-w-3xl">

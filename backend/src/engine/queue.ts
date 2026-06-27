@@ -4,8 +4,8 @@ import type { ConnectionOptions } from "bullmq";
 // ────────────────────────────────────────────────────────────────────────────
 // Queue names
 // ────────────────────────────────────────────────────────────────────────────
-export const PAYMENT_QUEUE_NAME = "autopilot:payment-events";
-export const CRON_QUEUE_NAME = "autopilot:cron-rules";
+export const PAYMENT_QUEUE_NAME = "autopilot-payment-events";
+export const CRON_QUEUE_NAME = "autopilot-cron-rules";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Build BullMQ connection options from REDIS_URL env var

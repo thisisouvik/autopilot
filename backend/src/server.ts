@@ -12,6 +12,7 @@ import chatRoutes from "./routes/chat";
 import transactionsRoutes from "./routes/transactions";
 import accountRoutes from "./routes/account";
 import autopilotRoutes from "./routes/autopilot";
+import vaultRoutes from "./routes/vault";
 import { startEngine } from "./engine/index";
 
 dotenv.config();
@@ -59,6 +60,7 @@ server.register(chatRoutes, { prefix: "/api/chat" });
 server.register(transactionsRoutes, { prefix: "/api/transactions" });
 server.register(accountRoutes, { prefix: "/api/account" });
 server.register(autopilotRoutes, { prefix: "/api/autopilot" });
+server.register(vaultRoutes, { prefix: "/api/vault" });
 
 // Root info route — helpful if you accidentally open port 3001 in a browser
 server.get("/", async () => {

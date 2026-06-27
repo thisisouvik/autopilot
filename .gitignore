@@ -1,8 +1,40 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ─────────────────────────────────────────────────────────────
+# Root .gitignore — AutoPilot Monorepo
+# Applies to both /frontend and /backend unless overridden
+# ─────────────────────────────────────────────────────────────
 
-# dependencies
-/node_modules
-/.pnp
+# ── OS & Editor ──────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.pem
+
+# Editor config / IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── Logs ─────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── Dependencies ─────────────────────────────────────────────
+node_modules/
+.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -10,32 +42,25 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# ── Environment Variables ────────────────────────────────────
+# NEVER commit secrets or API keys
+.env
+.env.*
+!.env.example
 
-# next.js
-/.next/
-/out/
+# ── Build Outputs ────────────────────────────────────────────
+dist/
+out/
+build/
 
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
+# ── TypeScript ───────────────────────────────────────────────
 *.tsbuildinfo
-next-env.d.ts
+
+# ── Testing / Coverage ───────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ── Misc ─────────────────────────────────────────────────────
+*.pem
+.vercel
+.netlify

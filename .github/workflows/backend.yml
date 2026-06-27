@@ -35,3 +35,6 @@ jobs:
 
     - name: Typecheck and Build TypeScript
       run: npm run build
+
+    - name: Run E2E Tests
+      run: npm test

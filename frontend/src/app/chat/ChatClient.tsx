@@ -321,7 +321,7 @@ function CoachView({
   const insights = buildInsights(rules);
 
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-6">
+    <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -460,7 +460,7 @@ export default function ChatClient({ initialRules }: { initialRules: Rule[] }) {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="flex-shrink-0 px-6 py-5 border-b border-white/[0.06] bg-black/50 backdrop-blur-md">
+      <div className="flex-shrink-0 px-4 md:px-6 py-4 md:py-5 border-b border-white/[0.06] bg-black/50 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/25 flex items-center justify-center">
@@ -515,7 +515,7 @@ export default function ChatClient({ initialRules }: { initialRules: Rule[] }) {
           <motion.div
             key="chat"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="flex-1 overflow-y-auto px-6 py-6 space-y-5"
+            className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6 space-y-5"
           >
             {isEmpty ? (
               <motion.div
@@ -574,7 +574,7 @@ export default function ChatClient({ initialRules }: { initialRules: Rule[] }) {
       </AnimatePresence>
 
       {/* Input bar — always visible */}
-      <div className="flex-shrink-0 px-6 py-4 border-t border-white/[0.06] bg-black/50 backdrop-blur-md">
+      <div className="flex-shrink-0 px-4 md:px-6 py-3 md:py-4 border-t border-white/[0.06] bg-black/50 backdrop-blur-md pb-[max(1rem,env(safe-area-inset-bottom))]">
         {mode === "coach" && hasRules && (
           <p className="text-xs text-white/25 mb-2 text-center flex items-center justify-center gap-1">
             <MessageCircle className="w-3 h-3" />

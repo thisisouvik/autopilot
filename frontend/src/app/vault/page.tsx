@@ -16,7 +16,7 @@ import {
   X,
   ChevronRight,
 } from "lucide-react";
-import Sidebar from "@/components/Sidebar";
+import DashboardShell from "@/components/DashboardShell";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -429,11 +429,8 @@ export default function VaultPage() {
   const investVault = vaults.find((v) => v.type === "investment");
 
   return (
-    <div className="flex h-screen bg-[#050505] text-white overflow-hidden">
-      {publicKey && <Sidebar publicKey={publicKey} />}
-
-      <main className="flex-1 md:ml-64 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-24 md:pb-8">
+    <DashboardShell publicKey={publicKey}>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 md:py-8 w-full">
 
           {/* Header */}
           <div className="mb-8">
@@ -533,7 +530,6 @@ export default function VaultPage() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+    </DashboardShell>
   );
 }

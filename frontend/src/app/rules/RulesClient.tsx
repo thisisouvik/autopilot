@@ -158,7 +158,7 @@ function RuleRow({
   return (
     <motion.div
       layout
-      className="flex items-center gap-4 px-6 py-5 border-b border-white/[0.05] last:border-0 hover:bg-white/[0.02] transition-colors cursor-pointer"
+      className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 border-b border-white/[0.05] last:border-0 hover:bg-white/[0.02] transition-colors cursor-pointer"
       onClick={onClick}
     >
       <div className="flex-1 min-w-0">
@@ -230,7 +230,7 @@ export default function RulesClient({ initialRules }: { initialRules: Rule[] }) 
   }, []);
 
   return (
-    <div className="px-6 py-8 max-w-3xl">
+    <div className="px-4 py-6 md:px-6 md:py-8 max-w-3xl mx-auto w-full">
       <div className="flex items-start justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Rules</h1>
@@ -271,7 +271,7 @@ export default function RulesClient({ initialRules }: { initialRules: Rule[] }) 
           </div>
         ) : (
           <div>
-            <div className="px-6 py-3.5 border-b border-white/[0.05]">
+            <div className="px-4 md:px-6 py-3.5 border-b border-white/[0.05]">
               <p className="text-xs font-semibold text-white/25 uppercase tracking-wider">All Rules</p>
             </div>
             <AnimatePresence>

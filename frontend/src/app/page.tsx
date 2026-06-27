@@ -229,21 +229,21 @@ export default function DashboardPage() {
 
   return (
     <DashboardShell publicKey={publicKey}>
-      <div className="px-6 py-8 max-w-5xl">
+      <div className="px-4 py-6 md:px-6 md:py-8 max-w-5xl mx-auto w-full">
         {/* Header */}
         <div className="mb-8">
           <p className="text-white/30 text-sm mb-1 flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5" />
             {now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
           </p>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
+          <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">
             {greeting},{" "}
-            <span className="font-mono text-white/50 text-xl">{shortKey}</span>
+            <span className="font-mono text-white/50 text-lg md:text-xl">{shortKey}</span>
           </h1>
         </div>
 
         {/* Balance Card */}
-        <div className="relative bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.08] rounded-3xl p-7 mb-6 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.08] rounded-3xl p-5 md:p-7 mb-6 overflow-hidden">
           <div className="absolute top-[-40px] right-[-40px] w-48 h-48 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-[-40px] left-[20%] w-40 h-40 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -264,11 +264,11 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="flex items-end gap-3 mb-2">
-              <span className="text-5xl font-bold text-white tracking-tight leading-none">
+            <div className="flex items-end gap-2 md:gap-3 mb-2 flex-wrap">
+              <span className="text-4xl md:text-5xl font-bold text-white tracking-tight leading-none break-all">
                 {parseFloat(xlmBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
-              <span className="text-2xl font-medium text-white/30 mb-1">XLM</span>
+              <span className="text-xl md:text-2xl font-medium text-white/30 mb-1">XLM</span>
             </div>
 
             <p className="text-white/25 text-sm">
@@ -278,7 +278,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <MetricTile label="Saved this month" value={`${savedThisMonth.toFixed(2)} XLM`} sub="via active rules" icon={Shield} accent="bg-green-500" />
           <MetricTile label="Active rules" value={String(activeRules)} sub={activeRules === 0 ? "Create your first" : "automations running"} icon={Zap} accent="bg-blue-500" />
           <MetricTile label="Invested" value={`${totalInvested.toFixed(2)} XLM`} sub="total automated" icon={TrendingUp} accent="bg-purple-500" />
@@ -287,7 +287,7 @@ export default function DashboardPage() {
 
         {/* Activity Feed */}
         <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+          <div className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-white/[0.06]">
             <div>
               <h2 className="text-sm font-semibold text-white">Recent Activity</h2>
               <p className="text-xs text-white/30 mt-0.5">Last 10 automated transactions</p>
@@ -297,7 +297,7 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          <div className="px-6">
+          <div className="px-4 md:px-6">
             {txRows.length === 0 ? (
               <EmptyActivity />
             ) : (

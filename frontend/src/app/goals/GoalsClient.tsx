@@ -339,7 +339,7 @@ export default function GoalsClient({
   const completed = goals.filter(g => (g.currentAmount ?? 0) >= (g.targetAmount ?? 1)).length;
 
   return (
-    <div className="px-6 py-8 max-w-3xl">
+    <div className="px-4 py-6 md:px-6 md:py-8 max-w-3xl mx-auto w-full">
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
@@ -361,7 +361,7 @@ export default function GoalsClient({
 
       {/* Stats */}
       {goals.length > 0 && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {[
             { label: "Total Goals", value: goals.length, icon: Target },
             { label: "Completed", value: completed, icon: CheckCircle2 },

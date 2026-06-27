@@ -515,8 +515,8 @@ function DangerZone() {
       <div className="px-6 py-4 border-b border-red-500/10">
         <p className="text-xs font-semibold text-red-500/60 uppercase tracking-wider">Danger Zone</p>
       </div>
-      <div className="px-6 py-5">
-        <div className="flex items-start justify-between gap-4">
+      <div className="px-4 md:px-6 py-5">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-white/80">Disconnect wallet</p>
             <p className="text-xs text-white/35 mt-1">
@@ -596,7 +596,7 @@ export default function AccountClient({ publicKey }: { publicKey: string }) {
   }
 
   return (
-    <div className="px-6 py-8 max-w-3xl space-y-6">
+    <div className="px-4 py-6 md:px-6 md:py-8 max-w-3xl mx-auto w-full space-y-6">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white tracking-tight">Account</h1>
         <p className="text-sm text-white/35 mt-1">Manage your wallet, limits, plan, and history</p>

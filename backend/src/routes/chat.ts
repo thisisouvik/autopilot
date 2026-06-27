@@ -35,8 +35,9 @@ Format:
           { role: "system", content: systemPrompt },
           { role: "user", content: message }
         ],
-        model: "qwen-2.5-32b", // or another supported model
+        model: "llama-3.3-70b-versatile",
         temperature: 0,
+        max_tokens: 256,
         response_format: { type: "json_object" },
       });
 

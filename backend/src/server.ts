@@ -1,0 +1,110 @@
+import Fastify from "fastify";
+import cors from "@fastify/cors";
+import jwt from "@fastify/jwt";
+import cookie from "@fastify/cookie";
+import rateLimit from "@fastify/rate-limit";
+import dotenv from "dotenv";
+
+import authRoutes from "./routes/auth";
+import rulesRoutes from "./routes/rules";
+import goalsRoutes from "./routes/goals";
+import chatRoutes from "./routes/chat";
+import transactionsRoutes from "./routes/transactions";
+import accountRoutes from "./routes/account";
+import autopilotRoutes from "./routes/autopilot";
+
+dotenv.config();
+
+const server = Fastify({
+  logger: true,
+});
+
+// Register plugins
+server.register(cors, {
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  credentials: true,
+});
+
+server.register(jwt, {
+  secret: process.env.JWT_SECRET || "super-secret-key-for-dev",
+  cookie: {
+    cookieName: "session",
+    signed: false,
+  },
+});
+
+server.register(cookie);
+
+server.register(rateLimit, {
+  max: 100,
+  timeWindow: "1 minute",
+});
+
+// Decorate request with user (from JWT)
+declare module "@fastify/jwt" {
+  interface FastifyJWT {
+    user: {
+      id: string;
+      publicKey: string;
+    };
+  }
+}
+
+// Register routes
+server.register(authRoutes, { prefix: "/api/auth" });
+server.register(rulesRoutes, { prefix: "/api/rules" });
+server.register(goalsRoutes, { prefix: "/api/goals" });
+server.register(chatRoutes, { prefix: "/api/chat" });
+server.register(transactionsRoutes, { prefix: "/api/transactions" });
+server.register(accountRoutes, { prefix: "/api/account" });
+server.register(autopilotRoutes, { prefix: "/api/autopilot" });
+
+// Root info route — helpful if you accidentally open port 3001 in a browser
+server.get("/", async () => {
+  return {
+    name: "AutoPilot API",
+    status: "running",
+    version: "1.0.0",
+    message: "This is the AutoPilot backend REST API. Open http://localhost:3000 to use the app.",
+    endpoints: [
+      "GET /health",
+      "POST /api/auth/login",
+      "POST /api/auth/logout",
+      "GET /api/rules",
+      "POST /api/rules",
+      "PATCH /api/rules/:id",
+      "DELETE /api/rules/:id",
+      "GET /api/goals",
+      "POST /api/goals",
+      "GET /api/transactions",
+      "GET /api/account",
+      "PATCH /api/account",
+      "POST /api/chat",
+      "GET /api/autopilot/status",
+      "POST /api/autopilot/monitor",
+    ],
+  };
+});
+
+// Suppress favicon.ico 404 noise
+server.get("/favicon.ico", async (_, reply) => {
+  reply.status(204).send();
+});
+
+// Health check
+server.get("/health", async () => {
+  return { status: "ok" };
+});
+
+const start = async () => {
+  try {
+    const port = process.env.PORT ? parseInt(process.env.PORT) : 3001;
+    await server.listen({ port, host: "0.0.0.0" });
+    console.log(`Server listening on http://localhost:${port}`);
+  } catch (err) {
+    server.log.error(err);
+    process.exit(1);
+  }
+};
+
+start();

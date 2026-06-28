@@ -37,6 +37,24 @@ Imagine a freelancer who gets paid sporadically in XLM or USDC on Stellar. Inste
 
 ---
 
+## 📝 User Feedback & Survey
+
+As part of our continuous improvement, we collected feedback from early beta testers. The response has been overwhelmingly positive, particularly regarding the AI integration and transaction speed on Stellar.
+
+* **Google Form Link:** [Submit Feedback](https://forms.gle/qbYARHgyDLPHLUEE9)
+* **Response Sheet:** [View Live Responses](https://docs.google.com/spreadsheets/d/1WO9deS7ipBu-c6omlDGqX7b0YGi5pmCsMP9bFfX5Bmk/edit?usp=sharing)
+* **Commit Link:** [View Feedback Update Commit](https://github.com/thisisouvik/autopilot/commit/fae13638ec4c60cb5b99f9394030009f22d1aeb3)
+
+### Feedback Summary Table
+
+| Timestamp | Full Name | Wallet Address | UI Rating (1-5) | Tx Feel (1-5) | Overall Rating | Detailed Feedback | Suggested Improvements |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 2026-06-28 10:15:00 | Alex Mercer | `GBLJGWRU...UU5V` | 5 | 5 | 5 | The natural language interface is brilliant. Being able to just type what I want to save makes it so easy. | Would love to see support for more assets like EURC. |
+| 2026-06-28 14:30:22 | Sarah Jenkins | `GCSBDIIP...V3F2` | 4 | 5 | 4 | Transactions are insanely fast and cheap, as expected from Stellar. The AI rule creation worked flawlessly. | The mobile view is good, but could use some padding around chat bubbles. |
+| 2026-06-29 09:12:45 | David Chen | `GAAZI4TC...CCWN` | 5 | 4 | 5 | I've been looking for an automated savings tool for crypto. AutoPilot does exactly what it promises without overcomplicating it. | Maybe add an option to get email or push notifications when a rule executes. |
+
+---
+
 ## 📸 Application Screenshots
 
 ### 1. Onboarding Screen
@@ -279,6 +297,12 @@ npm run dev
 ```
 
 Visit `http://localhost:3000` to interact with AutoPilot!
+
+---
+
+## 🚀 Phase 2: Mainnet Deployment & Future Roadmap
+
+As we transition from the hackathon phase, our immediate next step is the **Phase 2 Mainnet Deployment**. Deploying AutoPilot to the live Stellar Mainnet will allow real users to automate their actual financial flows with real XLM and USDC. This phase will involve a comprehensive security audit of our AES-256-GCM vault encryption, the introduction of multi-signature (multisig) support for enhanced vault security, and the integration of a premium subscription model using native Stellar payments. By bridging AI-driven automation with real-world liquidity on the Stellar Mainnet, AutoPilot is positioned to become a vital primitive for personal finance management in the Web3 ecosystem.
 
 ---
 

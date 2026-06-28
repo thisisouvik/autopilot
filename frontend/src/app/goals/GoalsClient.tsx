@@ -94,7 +94,10 @@ function GoalCard({
 
   const handleDelete = async () => {
     setDeleting(true);
-    await fetch(`/api/goals/${goal.id}`, { method: "DELETE" });
+    await fetch(`/api/goals/${goal.id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
     onDelete(goal.id);
   };
 
@@ -102,6 +105,7 @@ function GoalCard({
     await fetch(`/api/goals/${goal.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ linkedRuleId: ruleId }),
     });
     onLinkRule(goal.id, ruleId);

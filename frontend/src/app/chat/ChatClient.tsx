@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Send, Sparkles, Bot, User, Zap, Clock, DollarSign,
   AlertCircle, CheckCircle2, Loader2, Edit3, TrendingUp,
-  Shield, ArrowUpRight, RefreshCw, MessageCircle,
+  Shield, ArrowUpRight, RefreshCw, MessageCircle, X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -58,19 +58,14 @@ const SUGGESTIONS = [
 // ── Build insight cards from rules ────────────────────────────────────────────
 function buildInsights(rules: Rule[]): InsightCard[] {
   const cards: InsightCard[] = [];
-
-  // Guard: drop any null/undefined items before reading their properties
   const safe = (rules ?? []).filter((r) => r != null && r.action != null);
-
   const saveRules   = safe.filter(r => r.action === "Save"   && r.status === "active");
   const investRules = safe.filter(r => r.action === "Invest" && r.status === "active");
   const pausedRules = safe.filter(r => r.status === "paused");
 
-
   if (saveRules.length > 0) {
     cards.push({
-      id: "savings",
-      icon: Shield,
+      id: "savings", icon: Shield,
       title: "Your savings are on track",
       body: `You have ${saveRules.length} active saving rule${saveRules.length > 1 ? "s" : ""}. AutoPilot is watching every payment and setting aside your target amount automatically.`,
       actionLabel: "Increase savings rate",
@@ -81,8 +76,7 @@ function buildInsights(rules: Rule[]): InsightCard[] {
 
   if (investRules.length > 0) {
     cards.push({
-      id: "invest",
-      icon: TrendingUp,
+      id: "invest", icon: TrendingUp,
       title: "Investment automation active",
       body: `${investRules.length} investment rule${investRules.length > 1 ? "s are" : " is"} running. Consistent automated investing is one of the best strategies for long-term wealth building.`,
       accent: "from-blue-500/10 border-blue-500/15 text-blue-400",
@@ -91,8 +85,7 @@ function buildInsights(rules: Rule[]): InsightCard[] {
 
   if (pausedRules.length > 0) {
     cards.push({
-      id: "paused",
-      icon: Clock,
+      id: "paused", icon: Clock,
       title: `${pausedRules.length} rule${pausedRules.length > 1 ? "s" : ""} paused`,
       body: `You have paused rules that aren't protecting your finances. Head to the Rules tab to resume them, or ask me to create a better replacement.`,
       actionLabel: "Replace with a better rule",
@@ -103,8 +96,7 @@ function buildInsights(rules: Rule[]): InsightCard[] {
 
   if (saveRules.length === 0 && investRules.length === 0) {
     cards.push({
-      id: "no-savings",
-      icon: AlertCircle,
+      id: "no-savings", icon: AlertCircle,
       title: "No savings automation yet",
       body: "You have rules running but none dedicated to savings. A simple 10% save rule on every payment received can make a huge difference over time.",
       actionLabel: "Create a savings rule",
@@ -114,8 +106,7 @@ function buildInsights(rules: Rule[]): InsightCard[] {
   }
 
   cards.push({
-    id: "tip",
-    icon: Sparkles,
+    id: "tip", icon: Sparkles,
     title: "Weekly tip",
     body: "Consider setting a monthly spending buffer rule — if your balance drops below a threshold, AutoPilot can alert you and pause non-essential outflows.",
     actionLabel: "Set up a buffer rule",
@@ -127,19 +118,11 @@ function buildInsights(rules: Rule[]): InsightCard[] {
 }
 
 // ── Coach Card ────────────────────────────────────────────────────────────────
-function CoachCard({
-  card,
-  onAction,
-}: {
-  card: InsightCard;
-  onAction: (prompt: string) => void;
-}) {
+function CoachCard({ card, onAction }: { card: InsightCard; onAction: (prompt: string) => void }) {
   const Icon = card.icon;
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
       className={`bg-gradient-to-b ${card.accent} border rounded-2xl p-5`}
     >
       <div className="flex items-start gap-3 mb-3">
@@ -164,7 +147,118 @@ function CoachCard({
   );
 }
 
-// ── Rule Preview Card ─────────────────────────────────────────────────────────
+// ── Edit Panel ────────────────────────────────────────────────────────────────
+function EditPanel({
+  rule,
+  onSave,
+  onCancel,
+}: {
+  rule: ParsedRule;
+  onSave: (updated: ParsedRule) => void;
+  onCancel: () => void;
+}) {
+  const [amount, setAmount] = useState(String(rule.amount));
+  const [isPercentage, setIsPercentage] = useState(rule.isPercentage);
+
+  const handleSave = () => {
+    const parsed = parseFloat(amount);
+    if (isNaN(parsed) || parsed <= 0) return;
+    onSave({ ...rule, amount: parsed, isPercentage });
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
+      exit={{ opacity: 0, height: 0 }}
+      className="overflow-hidden"
+    >
+      <div className="mx-4 mb-4 p-4 rounded-xl bg-white/[0.04] border border-blue-500/20 space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Edit Amount</p>
+          <button onClick={onCancel} className="text-white/25 hover:text-white/60 transition-colors">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Type toggle */}
+        <div className="flex gap-2">
+          {[
+            { label: "Percentage (%)", value: true },
+            { label: "Fixed (XLM)", value: false },
+          ].map((opt) => (
+            <button
+              key={String(opt.value)}
+              onClick={() => setIsPercentage(opt.value)}
+              className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                isPercentage === opt.value
+                  ? "bg-blue-500/15 border-blue-500/30 text-blue-400"
+                  : "bg-white/[0.04] border-white/[0.06] text-white/35 hover:text-white/60"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Amount input */}
+        <div className="relative">
+          <input
+            type="number"
+            min="0.01"
+            step="any"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="w-full bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-blue-500/40 transition-colors pr-12"
+            placeholder="Enter amount"
+            autoFocus
+            onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") onCancel(); }}
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30">
+            {isPercentage ? "%" : "XLM"}
+          </span>
+        </div>
+
+        {/* Quick presets */}
+        <div className="flex gap-1.5 flex-wrap">
+          {(isPercentage ? [5, 10, 15, 20, 25] : [1, 5, 10, 20, 50]).map((v) => (
+            <button
+              key={v}
+              onClick={() => setAmount(String(v))}
+              className={`px-2.5 py-1 rounded-lg text-xs transition-all border ${
+                parseFloat(amount) === v
+                  ? "bg-blue-500/15 border-blue-500/30 text-blue-400"
+                  : "bg-white/[0.04] border-white/[0.05] text-white/35 hover:text-white/60"
+              }`}
+            >
+              {v}{isPercentage ? "%" : " XLM"}
+            </button>
+          ))}
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={handleSave}
+            disabled={!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0}
+            className="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Update Rule
+          </button>
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] text-white/50 hover:text-white/80 text-xs font-medium border border-white/[0.07] transition-all"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Rule Field ────────────────────────────────────────────────────────────────
 function RuleField({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="flex gap-3">
@@ -177,15 +271,25 @@ function RuleField({ icon, label, value }: { icon: React.ReactNode; label: strin
   );
 }
 
+// ── Rule Card ─────────────────────────────────────────────────────────────────
 function RuleCard({
-  rule, onActivate, onEdit, activating, activated,
+  rule, onActivate, onUpdate, activating, activated,
 }: {
   rule: ParsedRule;
   onActivate: () => void;
-  onEdit: () => void;
+  onUpdate: (updated: ParsedRule) => void;
   activating: boolean;
   activated: boolean;
 }) {
+  const [showEdit, setShowEdit] = useState(false);
+  const [currentRule, setCurrentRule] = useState(rule);
+
+  const handleSaveEdit = (updated: ParsedRule) => {
+    setCurrentRule(updated);
+    setShowEdit(false);
+    onUpdate(updated);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8, scale: 0.98 }}
@@ -199,25 +303,38 @@ function RuleCard({
         </div>
         <span className="text-xs font-semibold text-blue-400 tracking-wider uppercase">Rule Preview</span>
       </div>
+
       <div className="px-4 py-4 space-y-3">
-        <RuleField icon={<Clock className="w-3.5 h-3.5" />} label="TRIGGER" value={rule.trigger} />
-        <RuleField icon={<Zap className="w-3.5 h-3.5" />} label="ACTION" value={rule.action} />
+        <RuleField icon={<Clock className="w-3.5 h-3.5" />} label="TRIGGER" value={currentRule.trigger} />
+        <RuleField icon={<Zap className="w-3.5 h-3.5" />} label="ACTION" value={currentRule.action} />
         <RuleField
           icon={<DollarSign className="w-3.5 h-3.5" />}
           label="AMOUNT"
-          value={rule.isPercentage ? `${rule.amount}% of each payment` : `${rule.amount} XLM`}
+          value={currentRule.isPercentage ? `${currentRule.amount}% of each payment` : `${currentRule.amount} XLM`}
         />
-        {rule.limits?.maxPerMonth && (
+        {currentRule.limits?.maxPerMonth && (
           <RuleField
             icon={<AlertCircle className="w-3.5 h-3.5" />}
             label="LIMIT"
-            value={`Max ${rule.limits.maxPerMonth} XLM / month`}
+            value={`Max ${currentRule.limits.maxPerMonth} XLM / month`}
           />
         )}
       </div>
-      <div className="px-4 pb-4">
-        <p className="text-xs text-white/40 italic">{rule.description}</p>
+      <div className="px-4 pb-3">
+        <p className="text-xs text-white/40 italic">{currentRule.description}</p>
       </div>
+
+      {/* Edit panel */}
+      <AnimatePresence>
+        {showEdit && (
+          <EditPanel
+            rule={currentRule}
+            onSave={handleSaveEdit}
+            onCancel={() => setShowEdit(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {!activated && (
         <div className="px-4 pb-4 flex gap-2">
           <button
@@ -229,15 +346,20 @@ function RuleCard({
             {activating ? "Activating…" : "Activate Rule"}
           </button>
           <button
-            onClick={onEdit}
+            onClick={() => setShowEdit(prev => !prev)}
             disabled={activating}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-white/[0.06] hover:bg-white/[0.10] text-white/60 hover:text-white text-sm font-medium transition-all border border-white/[0.08]"
+            className={`flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl text-sm font-medium transition-all border ${
+              showEdit
+                ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                : "bg-white/[0.06] hover:bg-white/[0.10] text-white/60 hover:text-white border-white/[0.08]"
+            }`}
           >
             <Edit3 className="w-3.5 h-3.5" />
             Edit
           </button>
         </div>
       )}
+
       {activated && (
         <div className="px-4 pb-4">
           <div className="flex items-center gap-2 py-2.5 px-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-medium">
@@ -252,29 +374,27 @@ function RuleCard({
 
 // ── Chat Bubble ───────────────────────────────────────────────────────────────
 function ChatBubble({
-  msg, onActivate, onEdit,
+  msg, onActivate,
 }: {
   msg: Message;
   onActivate?: (rule: ParsedRule) => void;
-  onEdit?: (rule: ParsedRule) => void;
 }) {
   const [activating, setActivating] = useState(false);
   const [activated, setActivated] = useState(false);
+  const [currentRule, setCurrentRule] = useState<ParsedRule | undefined>(msg.rule);
   const isUser = msg.role === "user";
 
   const handleActivate = async () => {
-    if (!msg.rule || !onActivate) return;
+    if (!currentRule || !onActivate) return;
     setActivating(true);
-    await onActivate(msg.rule);
+    await onActivate(currentRule);
     setActivating(false);
     setActivated(true);
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
+      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
       className={`flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}
     >
       <div className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center mt-0.5 ${
@@ -296,11 +416,11 @@ function ChatBubble({
           {msg.content}
         </div>
 
-        {msg.rule && onActivate && onEdit && (
+        {currentRule && onActivate && (
           <RuleCard
-            rule={msg.rule}
+            rule={currentRule}
             onActivate={handleActivate}
-            onEdit={() => onEdit(msg.rule!)}
+            onUpdate={(updated) => setCurrentRule(updated)}
             activating={activating}
             activated={activated}
           />
@@ -311,22 +431,11 @@ function ChatBubble({
 }
 
 // ── Coach View ────────────────────────────────────────────────────────────────
-function CoachView({
-  rules,
-  onAsk,
-}: {
-  rules: Rule[];
-  onAsk: (prompt: string) => void;
-}) {
+function CoachView({ rules, onAsk }: { rules: Rule[]; onAsk: (prompt: string) => void }) {
   const insights = buildInsights(rules);
-
   return (
     <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6">
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-6"
-      >
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
         <div className="flex items-center gap-2 mb-1">
           <Sparkles className="w-4 h-4 text-purple-400" />
           <p className="text-xs font-semibold text-white/40 uppercase tracking-wider">Weekly Insights</p>
@@ -335,15 +444,9 @@ function CoachView({
           AutoPilot has analysed your {rules.length} rule{rules.length !== 1 ? "s" : ""}. Here's what it found:
         </p>
       </motion.div>
-
       <div className="space-y-4">
         {insights.map((card, i) => (
-          <motion.div
-            key={card.id}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-          >
+          <motion.div key={card.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
             <CoachCard card={card} onAction={onAsk} />
           </motion.div>
         ))}
@@ -377,8 +480,6 @@ export default function ChatClient({ initialRules }: { initialRules: Rule[] }) {
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || loading) return;
-
-    // Switch to chat mode when sending
     if (mode === "coach") setMode("chat");
 
     const userMsg: Message = { id: crypto.randomUUID(), role: "user", content: text.trim() };
@@ -390,6 +491,7 @@ export default function ChatClient({ initialRules }: { initialRules: Rule[] }) {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ message: text.trim() }),
       });
       const data = await res.json();
@@ -397,8 +499,8 @@ export default function ChatClient({ initialRules }: { initialRules: Rule[] }) {
       if (!res.ok || !data.rule) {
         setMessages(prev => [...prev, {
           id: crypto.randomUUID(), role: "assistant",
-          content: data.error ?? "Sorry, I couldn't parse that. Try rephrasing.",
-          isError: true,
+          content: data.error ?? data.message ?? "Sorry, I couldn't parse that. Try rephrasing.",
+          isError: !data.message,
         }]);
       } else {
         setMessages(prev => [...prev, {
@@ -422,6 +524,7 @@ export default function ChatClient({ initialRules }: { initialRules: Rule[] }) {
     const res = await fetch("/api/rules", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(rule),
     });
     if (res.ok) {
@@ -436,10 +539,6 @@ export default function ChatClient({ initialRules }: { initialRules: Rule[] }) {
     } else {
       setToast("Failed to activate rule. Please try again.");
     }
-  };
-
-  const handleEdit = (rule: ParsedRule) => {
-    setInput(rule.description ?? `${rule.action} ${rule.amount}${rule.isPercentage ? "%" : " XLM"} ${rule.trigger.toLowerCase()}`);
   };
 
   const hasRules = rules.length > 0;
@@ -477,7 +576,6 @@ export default function ChatClient({ initialRules }: { initialRules: Rule[] }) {
             </div>
           </div>
 
-          {/* Mode switcher (only shown when rules exist) */}
           {hasRules && (
             <div className="flex items-center gap-1 bg-white/[0.04] border border-white/[0.08] rounded-xl p-1">
               <button
@@ -545,7 +643,7 @@ export default function ChatClient({ initialRules }: { initialRules: Rule[] }) {
             ) : (
               <>
                 {messages.map(msg => (
-                  <ChatBubble key={msg.id} msg={msg} onActivate={handleActivate} onEdit={handleEdit} />
+                  <ChatBubble key={msg.id} msg={msg} onActivate={handleActivate} />
                 ))}
                 {loading && (
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3">
@@ -573,7 +671,7 @@ export default function ChatClient({ initialRules }: { initialRules: Rule[] }) {
         )}
       </AnimatePresence>
 
-      {/* Input bar — always visible */}
+      {/* Input bar */}
       <div className="flex-shrink-0 px-4 md:px-6 py-3 md:py-4 border-t border-white/[0.06] bg-black/50 backdrop-blur-md pb-[max(1rem,env(safe-area-inset-bottom))]">
         {mode === "coach" && hasRules && (
           <p className="text-xs text-white/25 mb-2 text-center flex items-center justify-center gap-1">

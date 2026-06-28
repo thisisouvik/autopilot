@@ -17,6 +17,7 @@
     "@stellar/freighter-api": "^6.0.1",
     "@stellar/stellar-sdk": "^16.0.1",
     "@types/ws": "^8.18.1",
+    "@vercel/analytics": "^2.0.1",
     "framer-motion": "^12.42.0",
     "geist": "^1.7.2",
     "jose": "^6.2.3",

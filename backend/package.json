@@ -11,7 +11,10 @@
     "migrate": "tsx src/migrations/addVaultTable.ts",
     "migrate:goal": "tsx src/migrations/addGoalTable.ts",
     "friendbot": "tsx src/scripts/friendbot.ts",
-    "gen-keypair": "tsx src/scripts/genKeypair.ts"
+    "gen-keypair": "tsx src/scripts/genKeypair.ts",
+    "simulate": "tsx src/scripts/simulate-payment.ts",
+    "e2e": "tsx src/scripts/e2e.ts",
+    "migrate:limits": "tsx src/migrations/addLimitsAndTxTable.ts"
   },
   "keywords": [],
   "author": "",

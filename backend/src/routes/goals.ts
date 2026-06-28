@@ -25,12 +25,13 @@ export default async function goalsRoutes(server: FastifyInstance) {
 
     const result = await sql`
       INSERT INTO "Goal" (
-        "userId", name, "targetAmount", emoji
+        "userId", name, "targetAmount", "currentAmount", emoji
       )
       VALUES (
         ${request.user!.id}::uuid,
         ${body.name},
         ${body.targetAmount},
+        0,
         ${body.emoji || "🎯"}
       )
       RETURNING *
@@ -53,7 +54,8 @@ export default async function goalsRoutes(server: FastifyInstance) {
     const result = await sql`
       UPDATE "Goal"
       SET 
-        "linkedRuleId" = CASE WHEN ${body.linkedRuleId !== undefined} THEN ${body.linkedRuleId}::uuid ELSE "linkedRuleId" END,
+        "linkedRuleId" = CASE WHEN ${body.linkedRuleId !== undefined} THEN ${body.linkedRuleId ?? null}::uuid ELSE "linkedRuleId" END,
+        "currentAmount" = CASE WHEN ${body.currentAmount !== undefined} THEN ${body.currentAmount ?? 0} ELSE "currentAmount" END,
         "updatedAt" = NOW()
       WHERE id = ${id}::uuid
       RETURNING *

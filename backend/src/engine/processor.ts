@@ -158,6 +158,21 @@ export async function processPaymentDirect(data: PaymentJobData): Promise<any> {
            ${execAmount}, ${action}, ${memo}, ${txHash}, NOW())
       `;
 
+      // ── Step 8: Increment linked Goal's currentAmount ──────────────
+      try {
+        await sql`
+          UPDATE "Goal"
+          SET
+            "currentAmount" = "currentAmount" + ${execAmount},
+            "updatedAt" = NOW()
+          WHERE "linkedRuleId" = ${rule.id}::uuid
+            AND "userId" = ${userId}::uuid
+            AND "currentAmount" < "targetAmount"
+        `;
+      } catch (goalErr: any) {
+        console.warn(`[Processor] ⚠ Could not update goal for rule ${rule.id}:`, goalErr?.message);
+      }
+
       try { await recordSpend(userId, execAmount); } catch {}
 
       console.log(`[Processor] ✅ Rule "${rule.action}" | ${execAmountStr} XLM → vault | tx: ${txHash.slice(0, 20)}…`);

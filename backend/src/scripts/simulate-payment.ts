@@ -85,6 +85,18 @@ async function run() {
     const ruleId = ruleRows[0].id;
     console.log(`   ✅ Rule created: Save ${RULE_PERCENTAGE}% on incoming XLM (id: ${ruleId.slice(0, 8)}…)\n`);
 
+    // ── 4b. Create a goal and link it to the rule ───────────────────────
+    console.log("4b️⃣  Creating a linked Goal (target: 100 XLM)...");
+    const goalRows = await sql`
+      INSERT INTO "Goal" (id, "userId", name, "targetAmount", "currentAmount", emoji, "linkedRuleId", "createdAt", "updatedAt")
+      VALUES (gen_random_uuid(), ${userId}::uuid,
+              'Test Vacation Fund', 100, 0, '✈️', ${ruleId}::uuid, NOW(), NOW())
+      RETURNING id, "currentAmount"
+    `;
+    const goalId = goalRows[0].id;
+    console.log(`   ✅ Goal created: Test Vacation Fund (id: ${goalId.slice(0, 8)}…)`);
+    console.log(`   💰 Initial goal progress: ${goalRows[0].currentAmount} / 100 XLM\n`);
+
     // ── 5. Create vault on Stellar ──────────────────────────────────────
     console.log("5️⃣  Creating savings vault on Stellar testnet (takes ~5s)...");
     const { publicKey: vaultPk, encryptedSecret, fundTxHash } = await createVaultOnChain(userId, "savings");
@@ -168,6 +180,26 @@ async function run() {
       });
     }
 
+    // ── 9. Verify Goal progress incremented ────────────────────────────
+    console.log("\n9️⃣  Verifying Goal currentAmount was incremented...");
+    const goalCheck = await sql`
+      SELECT "currentAmount", "targetAmount" FROM "Goal"
+      WHERE id = ${goalId}::uuid
+    `;
+    if (goalCheck.length > 0) {
+      const current = parseFloat(goalCheck[0].currentAmount);
+      const target  = parseFloat(goalCheck[0].targetAmount);
+      const expected = Number(PAYMENT_AMOUNT) * RULE_PERCENTAGE / 100;
+      console.log(`   Goal progress: ${current.toFixed(4)} / ${target.toFixed(4)} XLM`);
+      if (current >= expected * 0.99) {
+        console.log(`   ✅ Goal currentAmount correctly updated to ${current.toFixed(4)} XLM!\n`);
+      } else {
+        console.error(`   ❌ Goal currentAmount is ${current} but expected ~${expected}`);
+      }
+    } else {
+      console.error("   ❌ Goal not found in DB!");
+    }
+
     console.log("\n╔════════════════════════════════════════════╗");
     console.log("║   ✅ ALL TESTS PASSED — AUTOMATION WORKS!  ║");
     console.log("╚════════════════════════════════════════════╝\n");
@@ -183,6 +215,7 @@ async function run() {
       console.log("\n🧹 Cleaning up test data...");
       try {
         await sql`DELETE FROM "AutomatedTransaction" WHERE "userId" = ${userId}::uuid`;
+        await sql`DELETE FROM "Goal" WHERE "userId" = ${userId}::uuid`;
         await sql`DELETE FROM "Vault" WHERE "userId" = ${userId}::uuid`;
         await sql`DELETE FROM "Rule" WHERE "userId" = ${userId}::uuid`;
         await sql`DELETE FROM "User" WHERE id = ${userId}::uuid`;

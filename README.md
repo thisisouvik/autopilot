@@ -14,7 +14,7 @@
 </div>
 
 <div align="center">
-  <h3><strong><a href="https://autopilot-stellar.vercel.app">🚀 Live Deployment</a></strong> | <strong><a href="#">📺 Video Demo</a></strong></h3>
+  <h3><strong><a href="https://autopilot-stellar.vercel.app">🚀 Live Deployment (Vercel)</a></strong> | <strong><a href="https://autopilot-65uw.onrender.com">⚙️ Backend (Render)</a></strong></h3>
 </div>
 
 ---
@@ -70,6 +70,14 @@ Imagine a freelancer who gets paid sporadically in XLM or USDC on Stellar. Inste
 ### 8. Account Settings & Limits
 ![Account](assets/screenshots/account.png)
 *Manage spending limits, view full transaction history, and configure premium features to ensure safe and responsible automation.*
+
+### 9. Mobile Onboarding Screen
+![Mobile Onboarding](assets/screenshots/mobile-onboarding.png)
+*A optimized mobile view of the wallet connection screen, designed to fit smaller layouts perfectly.*
+
+### 10. Mobile Dashboard
+![Mobile Home](assets/screenshots/mobile-home.png)
+*The fully responsive mobile dashboard showing wallet balance, active rules, and recent actions on a single column layout.*
 
 ---
 

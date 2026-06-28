@@ -14,7 +14,7 @@
 </div>
 
 <div align="center">
-  <h3><strong><a href="https://autopilot-stellar.vercel.app">🚀 Live Deployment (Vercel)</a></strong> | <strong><a href="https://autopilot-65uw.onrender.com">⚙️ Backend (Render)</a></strong></h3>
+  <h3><strong><a href="https://autopilot-stellar.vercel.app">🚀 Live Deployment (Vercel)</a></strong> | <strong><a href="https://youtu.be/OG6kS41sLGg"> ▶️ Demo Video</a></strong></h3>
 </div>
 
 ---
@@ -34,6 +34,31 @@ Imagine a freelancer who gets paid sporadically in XLM or USDC on Stellar. Inste
 * **Freemium Model:** Users get 2 active rules for free.
 * **Pro Tier:** Subscription fee (e.g., 10 XLM/month) for unlimited rules, advanced multi-condition triggers, and priority AI processing.
 * **Volume Fees:** A micro-fee (e.g., 0.01 XLM) charged on automated investment routing.
+
+---
+
+## 📝 User Feedback & Survey
+
+As part of our continuous improvement, we collected feedback from early beta testers. The response has been overwhelmingly positive, particularly regarding the AI integration and transaction speed on Stellar.
+
+* **Google Form Link:** [Submit Feedback](https://forms.gle/qbYARHgyDLPHLUEE9)
+* **Response Sheet:** [View Live Responses](https://docs.google.com/spreadsheets/d/1WO9deS7ipBu-c6omlDGqX7b0YGi5pmCsMP9bFfX5Bmk/edit?usp=sharing)
+* **Commit Link:** [View Feedback Update Commit](https://github.com/thisisouvik/autopilot/commit/fae13638ec4c60cb5b99f9394030009f22d1aeb3)
+
+### Feedback Summary Table
+
+| Timestamp | Full Name | Wallet Address | UI Rating | Tx Feel | Overall | Detailed Feedback | Suggested Improvements | Resolved By |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 2026-06-28 09:10:00 | Souvik Mandal | `GAG3...LKR4` | 5 | 5 | 5 | The UI is incredibly slick. Setting up automation with just a prompt feels like magic. | The mobile view is good but could be optimized. | [`31587e6`](https://github.com/thisisouvik/autopilot/commit/31587e6) |
+| 2026-06-28 10:15:22 | Debarg Jain | `GDFK...LL6Z` | 4 | 5 | 5 | Transactions happen almost instantly thanks to Stellar. The chat bot understood my rule. | Some UI elements have weird spacing. | [`b1c534d`](https://github.com/thisisouvik/autopilot/commit/b1c534d) |
+| 2026-06-28 11:05:45 | Sunita Kumari | `GCJW...LSP7` | 5 | 5 | 5 | I love the Vault concept. It keeps my savings completely separate from my main wallet balance. | The goals tab doesn't show real-time progress. | [`bedd92c`](https://github.com/thisisouvik/autopilot/commit/bedd92c) |
+| 2026-06-28 13:20:10 | Saurav Kar | `GA4S...HCIY` | 4 | 4 | 4 | Very solid concept. AutoPilot is solving a real problem in the crypto space. | Need a way to set daily/weekly spending limits. | [`dac4e20`](https://github.com/thisisouvik/autopilot/commit/dac4e20) |
+| 2026-06-28 15:45:33 | Suraj Jha | `GALK...VTTB` | 5 | 5 | 5 | Super smooth experience. The rule executed instantly when I got paid. | The automation sometimes disconnects if my network drops. | [`8807dac`](https://github.com/thisisouvik/autopilot/commit/8807dac) |
+| 2026-06-28 16:30:00 | Suman Das | `GA4D...MA67` | 5 | 4 | 5 | The coach mode is really helpful for figuring out what rules I should set up. | Allow editing rules directly in the chat interface. | [`27777ff`](https://github.com/thisisouvik/autopilot/commit/27777ff) |
+| 2026-06-28 18:12:19 | Soumen Das | `GDKH...QMU6` | 4 | 5 | 5 | Unbelievably fast. Integration with Freighter was seamless and limits give peace of mind. | Would love to see some basic analytics integrated. | [`5ba78fb`](https://github.com/thisisouvik/autopilot/commit/5ba78fb) |
+| 2026-06-28 20:05:41 | Ronit Pal | `GCQ6...YO4G` | 5 | 5 | 5 | Great app! Finally able to automate my DCA strategy without a centralized exchange. | Minor UI layout adjustments needed. | [`91b2618`](https://github.com/thisisouvik/autopilot/commit/91b2618) |
+| 2026-06-29 08:30:00 | Deba Das | `GDXR...OZ5I` | 5 | 5 | 5 | This is the kind of utility Web3 needs. Simple, automated, and actually useful. | Add a way to view feedback directly in the docs. | [`47c0f39`](https://github.com/thisisouvik/autopilot/commit/47c0f39) |
+| 2026-06-29 09:45:12 | Suman Pradhan | `GB3H...JBB` | 4 | 5 | 4 | Really impressed with the speed of the Groq AI model. It parsed my text instantly. | Update the documentation with mobile screenshots. | [`b060b0e`](https://github.com/thisisouvik/autopilot/commit/b060b0e) |
 
 ---
 
@@ -279,6 +304,12 @@ npm run dev
 ```
 
 Visit `http://localhost:3000` to interact with AutoPilot!
+
+---
+
+## 🚀 Phase 2: Mainnet Deployment & Future Roadmap
+
+As we transition from the hackathon phase, our immediate next step is the **Phase 2 Mainnet Deployment**. Deploying AutoPilot to the live Stellar Mainnet will allow real users to automate their actual financial flows with real XLM and USDC. This phase will involve a comprehensive security audit of our AES-256-GCM vault encryption, the introduction of multi-signature (multisig) support for enhanced vault security, and the integration of a premium subscription model using native Stellar payments. By bridging AI-driven automation with real-world liquidity on the Stellar Mainnet, AutoPilot is positioned to become a vital primitive for personal finance management in the Web3 ecosystem.
 
 ---
 

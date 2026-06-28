@@ -14,7 +14,7 @@
 </div>
 
 <div align="center">
-  <h3><strong><a href="https://autopilot-stellar.vercel.app">🚀 Live Deployment (Vercel)</a></strong> | <strong><a href="https://autopilot-65uw.onrender.com">⚙️ Backend (Render)</a></strong></h3>
+  <h3><strong><a href="https://autopilot-stellar.vercel.app">🚀 Live Deployment (Vercel)</a></strong> | <strong><a href="https://youtu.be/OG6kS41sLGg"> ▶️ Demo Video</a></strong></h3>
 </div>
 
 ---
@@ -47,11 +47,18 @@ As part of our continuous improvement, we collected feedback from early beta tes
 
 ### Feedback Summary Table
 
-| Timestamp | Full Name | Wallet Address | UI Rating (1-5) | Tx Feel (1-5) | Overall Rating | Detailed Feedback | Suggested Improvements |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 2026-06-28 10:15:00 | Alex Mercer | `GBLJGWRU...UU5V` | 5 | 5 | 5 | The natural language interface is brilliant. Being able to just type what I want to save makes it so easy. | Would love to see support for more assets like EURC. |
-| 2026-06-28 14:30:22 | Sarah Jenkins | `GCSBDIIP...V3F2` | 4 | 5 | 4 | Transactions are insanely fast and cheap, as expected from Stellar. The AI rule creation worked flawlessly. | The mobile view is good, but could use some padding around chat bubbles. |
-| 2026-06-29 09:12:45 | David Chen | `GAAZI4TC...CCWN` | 5 | 4 | 5 | I've been looking for an automated savings tool for crypto. AutoPilot does exactly what it promises without overcomplicating it. | Maybe add an option to get email or push notifications when a rule executes. |
+| Timestamp | Full Name | Wallet Address | UI Rating | Tx Feel | Overall | Detailed Feedback | Suggested Improvements | Resolved By |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 2026-06-28 09:10:00 | Souvik Mandal | `GAG3...LKR4` | 5 | 5 | 5 | The UI is incredibly slick. Setting up automation with just a prompt feels like magic. | The mobile view is good but could be optimized. | [`31587e6`](https://github.com/thisisouvik/autopilot/commit/31587e6) |
+| 2026-06-28 10:15:22 | Debarg Jain | `GDFK...LL6Z` | 4 | 5 | 5 | Transactions happen almost instantly thanks to Stellar. The chat bot understood my rule. | Some UI elements have weird spacing. | [`b1c534d`](https://github.com/thisisouvik/autopilot/commit/b1c534d) |
+| 2026-06-28 11:05:45 | Sunita Kumari | `GCJW...LSP7` | 5 | 5 | 5 | I love the Vault concept. It keeps my savings completely separate from my main wallet balance. | The goals tab doesn't show real-time progress. | [`bedd92c`](https://github.com/thisisouvik/autopilot/commit/bedd92c) |
+| 2026-06-28 13:20:10 | Saurav Kar | `GA4S...HCIY` | 4 | 4 | 4 | Very solid concept. AutoPilot is solving a real problem in the crypto space. | Need a way to set daily/weekly spending limits. | [`dac4e20`](https://github.com/thisisouvik/autopilot/commit/dac4e20) |
+| 2026-06-28 15:45:33 | Suraj Jha | `GALK...VTTB` | 5 | 5 | 5 | Super smooth experience. The rule executed instantly when I got paid. | The automation sometimes disconnects if my network drops. | [`8807dac`](https://github.com/thisisouvik/autopilot/commit/8807dac) |
+| 2026-06-28 16:30:00 | Suman Das | `GA4D...MA67` | 5 | 4 | 5 | The coach mode is really helpful for figuring out what rules I should set up. | Allow editing rules directly in the chat interface. | [`27777ff`](https://github.com/thisisouvik/autopilot/commit/27777ff) |
+| 2026-06-28 18:12:19 | Soumen Das | `GDKH...QMU6` | 4 | 5 | 5 | Unbelievably fast. Integration with Freighter was seamless and limits give peace of mind. | Would love to see some basic analytics integrated. | [`5ba78fb`](https://github.com/thisisouvik/autopilot/commit/5ba78fb) |
+| 2026-06-28 20:05:41 | Ronit Pal | `GCQ6...YO4G` | 5 | 5 | 5 | Great app! Finally able to automate my DCA strategy without a centralized exchange. | Minor UI layout adjustments needed. | [`91b2618`](https://github.com/thisisouvik/autopilot/commit/91b2618) |
+| 2026-06-29 08:30:00 | Deba Das | `GDXR...OZ5I` | 5 | 5 | 5 | This is the kind of utility Web3 needs. Simple, automated, and actually useful. | Add a way to view feedback directly in the docs. | [`47c0f39`](https://github.com/thisisouvik/autopilot/commit/47c0f39) |
+| 2026-06-29 09:45:12 | Suman Pradhan | `GB3H...JBB` | 4 | 5 | 4 | Really impressed with the speed of the Groq AI model. It parsed my text instantly. | Update the documentation with mobile screenshots. | [`b060b0e`](https://github.com/thisisouvik/autopilot/commit/b060b0e) |
 
 ---
 

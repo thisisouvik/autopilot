@@ -104,6 +104,10 @@ As part of our continuous improvement, we collected feedback from early beta tes
 ![Mobile Home](assets/screenshots/mobile-home.png)
 *The fully responsive mobile dashboard showing wallet balance, active rules, and recent actions on a single column layout.*
 
+### 11. Analytics & Monitoring
+![Analytics](assets/screenshots/analytics.png)
+*Vercel Analytics integrated directly into the application to monitor real-time traffic, web vitals, and user engagement.*
+
 ---
 
 ## 🛠️ Tech Stack

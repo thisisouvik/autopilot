@@ -6,3 +6,4 @@ export function getDb() {
   }
   return neon(process.env.DATABASE_URL);
 }
+ 

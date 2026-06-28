@@ -68,10 +68,12 @@ const VAULT_META = {
 
 function WithdrawModal({
   vaultType,
+  balance,
   onClose,
   onSuccess,
 }: {
   vaultType: "savings" | "investment";
+  balance: VaultBalance | null;
   onClose: () => void;
   onSuccess: () => void;
 }) {
@@ -85,6 +87,21 @@ function WithdrawModal({
       setError("Enter a valid amount");
       return;
     }
+    
+    // Check reserve limit for XLM
+    if (asset === "xlm" && balance) {
+      const maxWithdrawable = Math.max(0, balance.xlm - 2.5);
+      if (parseFloat(amount) > maxWithdrawable) {
+        setError(`Insufficient funds. Minimum 2.5 XLM reserve required. Max: ${maxWithdrawable.toFixed(2)}`);
+        return;
+      }
+    } else if (asset === "usdc" && balance) {
+      if (parseFloat(amount) > balance.usdc) {
+        setError(`Insufficient USDC. Max: ${balance.usdc.toFixed(2)}`);
+        return;
+      }
+    }
+
     setLoading(true);
     setError("");
     try {
@@ -146,6 +163,24 @@ function WithdrawModal({
           ))}
         </div>
 
+        {/* Quick amounts */}
+        <div className="flex gap-2 mb-3">
+          {[25, 50, 75, 100].map((pct) => (
+            <button
+              key={pct}
+              onClick={() => {
+                if (balance) {
+                  const max = asset === "xlm" ? Math.max(0, balance.xlm - 2.5) : balance.usdc;
+                  setAmount(((pct / 100) * max).toFixed(4));
+                }
+              }}
+              className="flex-1 py-1.5 rounded-lg text-xs font-medium bg-white/[0.04] text-white/50 hover:bg-white/[0.08] hover:text-white/80 transition-colors border border-white/[0.04]"
+            >
+              {pct === 100 ? "Max" : `${pct}%`}
+            </button>
+          ))}
+        </div>
+
         <input
           type="number"
           placeholder="0.00"
@@ -161,7 +196,7 @@ function WithdrawModal({
         )}
 
         <p className="text-xs text-white/30 mb-4">
-          Funds will be sent to your connected wallet address.
+          Funds will be sent to your connected wallet. A minimum reserve of 2.5 XLM must remain in the vault.
         </p>
 
         <button
@@ -313,6 +348,7 @@ function VaultCard({
         {showWithdraw && (
           <WithdrawModal
             vaultType={vault.type}
+            balance={balance}
             onClose={() => setShowWithdraw(false)}
             onSuccess={onRefresh}
           />

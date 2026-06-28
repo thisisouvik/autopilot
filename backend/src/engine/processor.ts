@@ -134,10 +134,11 @@ async function processPaymentJob(job: Job<PaymentJobData>) {
       destination = investVault?.publicKey ?? null;
     }
 
-    // Fallback: if no vault exists, route to engine account and log
+    // Fallback: if no vault exists, skip execution
     if (!destination) {
-      console.warn(`[Processor] ⚠ No ${action} vault found for user — routing to engine account`);
-      destination = process.env.AUTOPILOT_PUBLIC_KEY!;
+      console.warn(`[Processor] ⚠ No ${action} vault found for user — skipping execution. User must create a Vault first.`);
+      results.push({ ruleId: rule.id, status: "failed", error: "No vault found" });
+      continue;
     }
 
     const memo = (rule.memo as string | null) ?? `AutoPilot:${action}:${execAmountStr}`.slice(0, 28);

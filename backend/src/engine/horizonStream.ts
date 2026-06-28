@@ -83,6 +83,15 @@ async function openStream(userId: string, publicKey: string) {
           // Ignore "Account not found" (unfunded testnet wallets)
           if (msg.includes("404") || msg.includes("Not Found")) return;
           console.error(`[Stream] ✗ Error on ${publicKey.slice(0, 8)}…:`, msg);
+
+          // Force stream recreation on network reset errors
+          if (msg.includes("ECONNRESET") || msg.includes("timeout") || msg.includes("socket")) {
+            const handle = activeStreams.get(publicKey);
+            if (handle) {
+              try { handle.close(); } catch {}
+              activeStreams.delete(publicKey);
+            }
+          }
         },
       });
 

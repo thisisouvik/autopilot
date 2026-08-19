@@ -1,0 +1,28 @@
+# AutoPilot Code Owners
+#
+# These owners are automatically requested for review
+# when someone opens a pull request that modifies their areas.
+#
+# Syntax: <pattern> <@owner> [<@owner2> ...]
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global fallback — all PRs request a review from the maintainer
+*                           @thisisouvik
+
+# Soroban Smart Contracts — highest risk, always needs review
+/contracts/                 @thisisouvik
+
+# Stellar transaction layer — financial risk
+/backend/src/stellar/       @thisisouvik
+/backend/src/engine/        @thisisouvik
+
+# Security-sensitive backend routes
+/backend/src/routes/auth.ts @thisisouvik
+/backend/src/routes/vault.ts @thisisouvik
+
+# CI / GitHub Actions — prevents supply chain attacks
+/.github/workflows/         @thisisouvik
+
+# Open-source community files
+/SECURITY.md                @thisisouvik
+/LICENSE                    @thisisouvik

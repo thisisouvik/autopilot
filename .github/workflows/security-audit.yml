@@ -1,0 +1,50 @@
+name: Dependency Security Audit
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # Every Monday at 6 AM UTC
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  npm-audit-backend:
+    name: npm audit (Backend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+        working-directory: backend
+      - name: Audit backend dependencies
+        run: npm audit --audit-level=high
+        working-directory: backend
+
+  npm-audit-frontend:
+    name: npm audit (Frontend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+        working-directory: frontend
+      - name: Audit frontend dependencies
+        run: npm audit --audit-level=high
+        working-directory: frontend
+
+  cargo-audit:
+    name: cargo audit (Contracts)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+      - name: Audit Rust dependencies
+        run: cargo audit
+        working-directory: contracts

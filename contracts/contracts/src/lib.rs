@@ -38,7 +38,7 @@ impl AutopilotVault {
     pub fn withdraw(env: Env, amount: i128, token_address: Address) {
         // Retrieve owner
         let owner: Address = env.storage().instance().get(&DataKey::Owner).unwrap();
-        
+
         // Require the owner's cryptographic signature for this invocation
         owner.require_auth();
 

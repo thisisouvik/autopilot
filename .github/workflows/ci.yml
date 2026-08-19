@@ -83,7 +83,7 @@ jobs:
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown
+          targets: wasm32v1-none
           components: clippy, rustfmt
 
       - name: Cache Cargo registry
@@ -110,5 +110,5 @@ jobs:
         working-directory: contracts
 
       - name: Build contract (WASM)
-        run: cargo build --target wasm32-unknown-unknown --release
+        run: cargo build --target wasm32v1-none --release
         working-directory: contracts

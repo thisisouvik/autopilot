@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Community Discussion
+    url: https://github.com/thisisouvik/autopilot/discussions
+    about: Ask questions, share ideas, and discuss AutoPilot with the community.
+  - name: 🌐 Stellar Developer Docs
+    url: https://developers.stellar.org
+    about: Official Stellar and Soroban developer documentation.
+  - name: 📖 AutoPilot Live Demo
+    url: https://autopilot-stellar.vercel.app
+    about: Try AutoPilot live on the Stellar Testnet.

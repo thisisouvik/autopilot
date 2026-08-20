@@ -102,7 +102,7 @@ export default async function vaultRoutes(server: FastifyInstance) {
         explorerUrl: `https://stellar.expert/explorer/testnet/tx/${fundTxHash}`,
       });
     } catch (err: any) {
-      console.error(`[Vault] ✗ Failed to create ${type} vault:`, err?.message);
+      console.error("[Vault] ✗ Failed to create %s vault:", type, err?.message);
       return reply.status(500).send({
         error: `Failed to create vault: ${err?.message ?? "Unknown error"}`,
       });

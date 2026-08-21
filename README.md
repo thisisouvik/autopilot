@@ -24,7 +24,7 @@
   </p>
 
   <h3>
-    <a href="https://autopilot-stellar.vercel.app">🚀 Live Demo</a> &nbsp;|&nbsp;
+    <a href="https://autopilot-stellar-mauve.vercel.app/">🚀 Live Demo</a> &nbsp;|&nbsp;
     <a href="https://youtu.be/OG6kS41sLGg">▶️ Demo Video</a> &nbsp;|&nbsp;
     <a href="https://github.com/thisisouvik/autopilot/issues">🐛 Report a Bug</a> &nbsp;|&nbsp;
     <a href="https://github.com/thisisouvik/autopilot/discussions">💬 Discussions</a>

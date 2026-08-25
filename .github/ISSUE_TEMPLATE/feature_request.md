@@ -11,7 +11,7 @@ assignees: ""
 <!-- Is your feature request related to a problem? Describe it clearly.
      e.g. "I'm frustrated when I receive USDC and my rules don't trigger..." -->
 
-## 💡 Proposed Solution
+## 💡 Proposed Solution/Mission
 
 <!-- A clear and concise description of what you want to happen. -->
 

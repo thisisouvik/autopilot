@@ -35,6 +35,7 @@ assignees: ""
 | Stellar Network | ☐ Testnet  ☐ Mainnet |
 | Freighter Wallet version | e.g. 5.8.0 |
 | AutoPilot version / commit | e.g. `a8ea9ff` |
+| Rust / Soroban CLI version (if contract-related) | e.g. `rustc 1.79.0`, `stellar-cli 21.0.0` |
 
 ## 📋 Logs / Error Output
 

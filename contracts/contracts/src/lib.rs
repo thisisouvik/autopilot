@@ -46,4 +46,19 @@ impl AutopilotVault {
         let client = token::Client::new(&env, &token_address);
         client.transfer(&env.current_contract_address(), &owner, &amount);
     }
+
+    /// Engine execute - allow engine to execute rule-based withdrawals
+    pub fn engine_execute(env: Env, amount: i128, token_address: Address) {
+        let engine: Address = env.storage().instance().get(&DataKey::Engine).unwrap();
+        engine.require_auth();
+        
+        let owner: Address = env.storage().instance().get(&DataKey::Owner).unwrap();
+        
+        // Transfer funds from contract to owner
+        let client = token::Client::new(&env, &token_address);
+        client.transfer(&env.current_contract_address(), &owner, &amount);
+    }
 }
+
+#[cfg(test)]
+mod test;

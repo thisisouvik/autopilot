@@ -3,6 +3,12 @@ import { StrKey } from "@stellar/stellar-sdk";
 import { getDb } from "../lib/db";
 import { checkRateLimit } from "../lib/redis";
 
+// Single source of truth for the session lifetime (7 days). It must be identical
+// for the JWT `expiresIn` and the HttpOnly cookie `maxAge`, otherwise the browser
+// drops the cookie before the token is actually expired (or vice-versa), logging
+// the user out prematurely.
+export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
+
 export default async function authRoutes(server: FastifyInstance) {
 
   /**
@@ -66,10 +72,11 @@ export default async function authRoutes(server: FastifyInstance) {
 
     const user = users[0];
 
-    // Issue JWT — stored in HttpOnly cookie (7 day expiry)
+    // Issue JWT + cookie using ONE shared TTL so the token and the cookie always
+    // stay in sync (this is what prevents users being logged out before exp).
     const token = server.jwt.sign(
       { id: user.id, publicKey: user.publicKey },
-      { expiresIn: "7d" }
+      { expiresIn: SESSION_TTL_SECONDS }
     );
 
     const isProd = process.env.NODE_ENV === "production";
@@ -79,7 +86,7 @@ export default async function authRoutes(server: FastifyInstance) {
       secure: isProd,
       // cross-domain (Vercel frontend ↔ Render backend) requires sameSite "none" + secure
       sameSite: isProd ? "none" : "strict",
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: SESSION_TTL_SECONDS,
     });
 
     return reply.send({ success: true, user: { id: user.id, publicKey: user.publicKey } });

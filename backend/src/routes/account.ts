@@ -20,6 +20,13 @@ export default async function accountRoutes(server: FastifyInstance) {
     ]);
 
     const u = userRows[0];
+    if (!u) {
+      // Session token is valid but the user row is missing (e.g. DB reset or
+      // a stale cookie). Return 401 so the client re-authenticates instead of
+      // crashing on a null dereference of `u.publicKey` below.
+      return reply.status(401).send({ error: "User not found. Please sign in again." });
+    }
+
     return reply.send({
       publicKey: u.publicKey,
       dailyLimit: u.dailyLimit ?? null,

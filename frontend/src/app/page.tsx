@@ -147,7 +147,12 @@ export default function DashboardPage() {
         const txData   = await safeJson(txRes);
         const rulesData = await safeJson(rulesRes);
 
-        if (!account) return; // not logged in / server error
+        if (!account) {
+          // Not logged in or backend error — stop loading so the dashboard
+          // never hangs on the spinner at startup.
+          setLoading(false);
+          return;
+        }
 
         const userPublicKey = account.publicKey ?? "";
         setPublicKey(userPublicKey);

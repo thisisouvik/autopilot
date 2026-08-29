@@ -15,6 +15,27 @@ import { Horizon, Networks, Asset } from "@stellar/stellar-sdk";
 export const HORIZON_URL =
   process.env.HORIZON_URL ?? "https://horizon-testnet.stellar.org";
 
+// Hard cap on how long a single Horizon read (e.g. fetching a large account's
+// payment history) may take. Horizon can be slow for accounts with very large
+// payment datasets; without a bound this can hang a request until the caller
+// times out (issue #2). Failing fast with a clear error is better than dropping.
+export const HORIZON_REQUEST_TIMEOUT_MS = 10_000;
+
+/**
+ * Rejects `promise` if it does not settle within `ms`, with a clear timeout
+ * error. Otherwise resolves/rejects with the original result.
+ */
+export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`Horizon request timed out after ${ms}ms`)),
+      ms
+    );
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 export const NETWORK_PASSPHRASE =
   process.env.STELLAR_NETWORK === "mainnet"
     ? Networks.PUBLIC
@@ -124,12 +145,15 @@ export async function fetchRecentPayments(
   limit = 20
 ): Promise<StellarPayment[]> {
   try {
-    const records = await getHorizon()
-      .payments()
-      .forAccount(accountId)
-      .order("desc")
-      .limit(limit)
-      .call();
+    const records = await withTimeout(
+      getHorizon()
+        .payments()
+        .forAccount(accountId)
+        .order("desc")
+        .limit(limit)
+        .call(),
+      HORIZON_REQUEST_TIMEOUT_MS
+    );
 
     return records.records
       .filter((r: any) => r.type === "payment" && r.to === accountId)

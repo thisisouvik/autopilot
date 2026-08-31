@@ -16,7 +16,7 @@
  *   xlmBalance, usdcBalance, createdAt, updatedAt
  */
 
-import { Keypair } from "@stellar/stellar-sdk";
+import { Asset, Keypair } from "@stellar/stellar-sdk";
 import { generateVaultKeypair, loadKeypairFromBlob } from "./keypair";
 import {
   fetchAccountBalances,
@@ -26,7 +26,14 @@ import {
   explorerUrl,
   USDC_ASSET,
 } from "./horizon";
-import { fundAndTrustlineVault, createUSDCTrustline, sendXLM, sendUSDC, mergeAccount } from "./transaction";
+import {
+  fundAndTrustlineVault,
+  createUSDCTrustline,
+  sendXLM,
+  sendUSDC,
+  mergeAccount,
+  closeAccountWithTrustlines,
+} from "./transaction";
 
 export type VaultType = "savings" | "investment";
 
@@ -173,13 +180,69 @@ export async function withdrawUSDCFromVault(
 }
 
 /**
- * Close a vault — merge all XLM back to the user's wallet.
- * Used when a user disconnects / deletes their account.
+ * Close a vault — return every asset it holds, then merge the XLM back to the
+ * user's wallet and delete the account.
+ *
+ * A vault is created with a USDC trustline, and Stellar refuses an
+ * accountMerge while any trustline exists (op_has_sub_entries) — so the
+ * trustline must be removed even when the USDC balance is zero. Any USDC
+ * still held is paid back to the user first, in the same atomic transaction.
+ *
+ * Returning USDC requires the user's wallet to trust USDC. If it doesn't, the
+ * payment would fail with op_no_trust and take the whole close down with it,
+ * so that case is reported up front with an actionable message.
  */
 export async function closeVault(
   encryptedSecret: string,
   toPublicKey: string
 ): Promise<string> {
   const vaultSigner = loadKeypairFromBlob(encryptedSecret);
-  return mergeAccount(vaultSigner, toPublicKey);
+  const vaultPublicKey = vaultSigner.publicKey();
+
+  const balances = await fetchAccountBalances(vaultPublicKey);
+
+  // Every non-native balance is a trustline that blocks the merge.
+  const nonNative = balances.filter((b) => !b.isNative);
+
+  if (nonNative.length === 0) {
+    // No trustlines — a plain merge is enough.
+    return mergeAccount(vaultSigner, toPublicKey);
+  }
+
+  const heldAssets = nonNative.map((b) => {
+    const [code, issuer] = b.asset.split(":");
+    return { asset: new Asset(code, issuer), balance: b.balance };
+  });
+
+  // Only assets with a balance actually need the destination to trust them.
+  const assetsToReturn = heldAssets.filter((a) => parseFloat(a.balance) > 0);
+
+  if (assetsToReturn.length > 0) {
+    const destinationBalances = await fetchAccountBalances(toPublicKey);
+    const missing = assetsToReturn
+      .map((a) => a.asset)
+      .filter(
+        (asset) =>
+          !destinationBalances.some(
+            (b) => b.asset === `${asset.getCode()}:${asset.getIssuer()}`
+          )
+      );
+
+    if (missing.length > 0) {
+      const codes = missing.map((a) => a.getCode()).join(", ");
+      throw new Error(
+        `Cannot close vault: your wallet has no ${codes} trustline, so the ` +
+          `vault's ${codes} balance cannot be returned. Add a ${codes} ` +
+          `trustline to your wallet, or withdraw the ${codes} first, then close the vault.`
+      );
+    }
+  }
+
+  console.log(
+    `[Vault] 🔒 Closing ${vaultPublicKey.slice(0, 8)}… — ` +
+      `returning ${assetsToReturn.length} asset balance(s) and removing ` +
+      `${heldAssets.length} trustline(s) before merge`
+  );
+
+  return closeAccountWithTrustlines(vaultSigner, toPublicKey, heldAssets);
 }

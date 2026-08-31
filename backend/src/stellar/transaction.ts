@@ -9,6 +9,7 @@
  *  - createTrustline(account, asset)       ← needed before receiving USDC
  *  - fundAccount(destination)              ← activate a new Stellar account (min 1 XLM)
  *  - mergeStellarAccount(from, destination) ← send all XLM + close account
+ *  - closeAccountWithTrustlines(...)        ← return assets + drop trustlines + merge
  *
  * All functions accept a Keypair for signing and return the tx hash.
  */
@@ -20,6 +21,7 @@ import {
   Asset,
   BASE_FEE,
   Keypair,
+  xdr,
 } from "@stellar/stellar-sdk";
 import {
   loadAccount,
@@ -191,6 +193,64 @@ export async function mergeAccount(
   builder.addMemo(Memo.text("AutoPilot close vault"));
 
   const tx = builder.setTimeout(TX_TIMEOUT_SECONDS).build();
+  tx.sign(signer);
+
+  return submitTransaction(tx);
+}
+
+/**
+ * Close an account that may still hold non-native assets.
+ *
+ * Stellar rejects an accountMerge while the account has any sub-entries, so a
+ * plain mergeAccount() fails with op_has_sub_entries whenever a trustline
+ * exists — even a trustline whose balance is zero. This builds one atomic
+ * transaction that drains and unwinds each asset before merging:
+ *
+ *   1. payment      — return the remaining balance to the destination (skipped at zero)
+ *   2. changeTrust  — limit "0" removes the trustline and frees the reserve
+ *   3. accountMerge — send the remaining XLM and delete the account
+ *
+ * Doing this in a single transaction matters: if the steps were separate and
+ * one failed, the vault would be left half-closed (funds moved but account
+ * still open, or trustline dropped with balance stranded).
+ *
+ * @param signer       Keypair of the account being closed
+ * @param destination  Where the assets and remaining XLM are sent
+ * @param assets       Non-native assets held, with the balance to return
+ */
+export async function closeAccountWithTrustlines(
+  signer: typeof Keypair.prototype,
+  destination: string,
+  assets: { asset: Asset; balance: string }[]
+): Promise<string> {
+  const account = await loadAccount(signer.publicKey());
+
+  const operations: xdr.Operation[] = [];
+
+  for (const { asset, balance } of assets) {
+    // A zero balance needs no payment, but the trustline must still go.
+    if (parseFloat(balance) > 0) {
+      operations.push(
+        Operation.payment({ destination, asset, amount: balance })
+      );
+    }
+    operations.push(Operation.changeTrust({ asset, limit: "0" }));
+  }
+
+  operations.push(Operation.accountMerge({ destination }));
+
+  const builder = new TransactionBuilder(account, {
+    fee: String(parseInt(BASE_FEE) * operations.length),
+    networkPassphrase: NETWORK_PASSPHRASE,
+  });
+
+  for (const op of operations) builder.addOperation(op);
+
+  const tx = builder
+    .addMemo(Memo.text("AutoPilot close vault"))
+    .setTimeout(TX_TIMEOUT_SECONDS)
+    .build();
+
   tx.sign(signer);
 
   return submitTransaction(tx);

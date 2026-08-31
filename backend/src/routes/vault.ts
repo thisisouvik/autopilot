@@ -231,10 +231,15 @@ export default async function vaultRoutes(server: FastifyInstance) {
 
       return reply.send({
         success: true,
-        message: `${type} vault closed. All XLM returned to your wallet.`,
+        message: `${type} vault closed. All funds returned to your wallet.`,
         txHash,
       });
     } catch (err: any) {
+      // A missing trustline on the user's wallet is a user-fixable condition,
+      // not a server fault — surface it as a 400 with the actionable message.
+      if (err?.message?.includes("Cannot close vault")) {
+        return reply.status(400).send({ error: err.message });
+      }
       return reply.status(500).send({ error: err?.message });
     }
   });

@@ -1,7 +1,10 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::{Address as _}, token, Address, Env};
+use soroban_sdk::{
+    testutils::{storage::Instance as _, Address as _, Ledger as _},
+    token, Address, Env,
+};
 
 #[test]
 fn test_initialize() {
@@ -92,4 +95,53 @@ fn test_engine_execute() {
     
     assert_eq!(token_client.balance(&contract_id), 700);
     assert_eq!(token_client.balance(&owner), 300);
+}
+
+#[test]
+fn test_instance_ttl_extended_on_initialize() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, AutopilotVault);
+    let client = AutopilotVaultClient::new(&env, &contract_id);
+
+    let owner = Address::generate(&env);
+    let engine = Address::generate(&env);
+
+    client.initialize(&owner, &engine);
+
+    // initialize() must leave the instance alive for ~30 days of ledgers
+    let ttl = env.as_contract(&contract_id, || env.storage().instance().get_ttl());
+    assert!(ttl >= 17280 * 30);
+}
+
+#[test]
+fn test_vault_survives_long_inactivity() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, AutopilotVault);
+    let client = AutopilotVaultClient::new(&env, &contract_id);
+
+    let owner = Address::generate(&env);
+    let engine = Address::generate(&env);
+
+    client.initialize(&owner, &engine);
+
+    // Advance ~20 days of ledgers, then keep the vault alive without a withdrawal
+    env.ledger().set_sequence_number(env.ledger().sequence() + 17280 * 20);
+    client.extend_ttl();
+
+    // Another ~20 days: the vault is still reachable because of the bump above
+    env.ledger().set_sequence_number(env.ledger().sequence() + 17280 * 20);
+    assert_eq!(client.get_owner(), owner);
+
+    let token_admin = Address::generate(&env);
+    let token_address = env.register_stellar_asset_contract_v2(token_admin).address();
+    let token_client = token::Client::new(&env, &token_address);
+    let token_admin_client = token::StellarAssetClient::new(&env, &token_address);
+    token_admin_client.mint(&contract_id, &1000);
+
+    client.withdraw(&500, &token_address);
+    assert_eq!(token_client.balance(&owner), 500);
 }

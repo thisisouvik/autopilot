@@ -8,7 +8,7 @@
  */
 
 import { Keypair } from "@stellar/stellar-sdk";
-import { sendXLM } from "../stellar/transaction";
+import { sendXLM, sendUSDC } from "../stellar/transaction";
 
 export { fetchRecentPayments } from "../stellar/horizon";
 export { loadKeypairFromBlob } from "../stellar/keypair";
@@ -22,15 +22,22 @@ export function getEngineKeypair(): typeof Keypair.prototype {
 
 /**
  * Execute an automated rule transaction.
- * Sends XLM from the engine account to a destination (vault or user wallet).
+ * Sends XLM or USDC from the engine account to a destination (vault or user wallet).
+ *
+ * The asset defaults to XLM so existing 3-argument callers keep working.
+ * USDC requires a trustline on both the engine account and the destination —
+ * vaults get one at creation time (see stellar/vault.ts).
  */
 export async function executeRuleTransaction(
   destinationId: string,
-  amountXLM: string,
-  memoText: string
+  amount: string,
+  memoText: string,
+  asset: "XLM" | "USDC" = "XLM"
 ): Promise<string> {
   const engine = getEngineKeypair();
-  return sendXLM(engine, destinationId, amountXLM, memoText);
+  return asset === "USDC"
+    ? sendUSDC(engine, destinationId, amount, memoText)
+    : sendXLM(engine, destinationId, amount, memoText);
 }
 
 /** Check if a Horizon payment ID has already been processed (deduplication) */

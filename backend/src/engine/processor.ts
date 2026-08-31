@@ -22,9 +22,24 @@ import { PAYMENT_QUEUE_NAME, PaymentJobData, CronJobData, CRON_QUEUE_NAME, getCo
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
-function doesPaymentMatchTrigger(trigger: string, asset: string): boolean {
+/** Assets the engine can move on a rule execution. */
+export type SupportedAsset = "XLM" | "USDC";
+
+/**
+ * Horizon reports assets as "XLM" (native) or "CODE:ISSUER".
+ * Returns the supported asset code, or null for assets we can't execute against.
+ */
+export function parseAssetCode(asset: string): SupportedAsset | null {
+  const code = asset === "XLM" ? "XLM" : asset.split(":")[0]?.toUpperCase();
+  return code === "XLM" || code === "USDC" ? code : null;
+}
+
+export function doesPaymentMatchTrigger(trigger: string, asset: string): boolean {
   const t = trigger.toLowerCase();
-  const isXLM = asset === "XLM";
+
+  // Unsupported assets (arbitrary tokens) can never be executed against.
+  const assetCode = parseAssetCode(asset);
+  if (!assetCode) return false;
 
   const matchesTrigger =
     t.includes("every payment") ||
@@ -37,9 +52,19 @@ function doesPaymentMatchTrigger(trigger: string, asset: string): boolean {
     t.includes("salary") ||
     t.includes("income") ||
     t.includes("transfer") ||
-    t.includes("xlm");
+    t.includes("xlm") ||
+    t.includes("usdc");
 
-  return matchesTrigger && isXLM;
+  if (!matchesTrigger) return false;
+
+  // A trigger naming one asset only fires for that asset; a generic trigger
+  // ("every payment", "salary", …) fires for any supported asset.
+  const namesXLM = t.includes("xlm");
+  const namesUSDC = t.includes("usdc");
+  if (namesXLM && !namesUSDC) return assetCode === "XLM";
+  if (namesUSDC && !namesXLM) return assetCode === "USDC";
+
+  return true;
 }
 
 /**
@@ -84,7 +109,9 @@ export async function processPaymentDirect(data: PaymentJobData): Promise<any> {
   const user = userRows[0];
   const dailyLimit  = user.dailyLimit  ? parseFloat(user.dailyLimit)  : null;
   const weeklyLimit = user.weeklyLimit ? parseFloat(user.weeklyLimit) : null;
-  const paymentAmountXLM = parseFloat(amount);
+  const paymentAmount = parseFloat(amount);
+  // Rules execute in the same asset that was received.
+  const assetCode = parseAssetCode(asset);
 
   // ── Step 3: Fetch vaults
   const vaults = await sql`
@@ -103,14 +130,14 @@ export async function processPaymentDirect(data: PaymentJobData): Promise<any> {
     if (!triggerMatches) continue;
 
     const execAmount = (rule.isPercentage as boolean)
-      ? (parseFloat(rule.amount) / 100) * paymentAmountXLM
+      ? (parseFloat(rule.amount) / 100) * paymentAmount
       : parseFloat(rule.amount);
 
-    console.log(`[Processor] 💰 Exec: ${execAmount} XLM (${rule.isPercentage ? `${rule.amount}%` : "flat"} of ${paymentAmountXLM})`);
+    console.log(`[Processor] 💰 Exec: ${execAmount} ${assetCode} (${rule.isPercentage ? `${rule.amount}%` : "flat"} of ${paymentAmount})`);
 
     if (execAmount <= 0.0000001) { console.log("[Processor] ⚠ Amount too small — skipping"); continue; }
-    if (execAmount > paymentAmountXLM) {
-      console.log(`[Processor] ⚠ Rule amount ${execAmount} > payment ${paymentAmountXLM} — skipping`);
+    if (execAmount > paymentAmount) {
+      console.log(`[Processor] ⚠ Rule amount ${execAmount} > payment ${paymentAmount} — skipping`);
       continue;
     }
 
@@ -145,10 +172,11 @@ export async function processPaymentDirect(data: PaymentJobData): Promise<any> {
     }
 
     const memo = (rule.memo as string | null) ?? `AutoPilot:${action}`.slice(0, 28);
-    console.log(`[Processor] 🚀 Sending ${execAmountStr} XLM → ${destination.slice(0, 8)}… (${action})`);
+    console.log(`[Processor] 🚀 Sending ${execAmountStr} ${assetCode} → ${destination.slice(0, 8)}… (${action})`);
 
     try {
-      const txHash = await executeRuleTransaction(destination, execAmountStr, memo);
+      // assetCode is non-null here — doesPaymentMatchTrigger() rejects unsupported assets.
+      const txHash = await executeRuleTransaction(destination, execAmountStr, memo, assetCode!);
 
       await sql`
         INSERT INTO "AutomatedTransaction"
@@ -175,8 +203,8 @@ export async function processPaymentDirect(data: PaymentJobData): Promise<any> {
 
       try { await recordSpend(userId, execAmount); } catch {}
 
-      console.log(`[Processor] ✅ Rule "${rule.action}" | ${execAmountStr} XLM → vault | tx: ${txHash.slice(0, 20)}…`);
-      results.push({ ruleId: rule.id, status: "executed", txHash, amount: execAmountStr, destination });
+      console.log(`[Processor] ✅ Rule "${rule.action}" | ${execAmountStr} ${assetCode} → vault | tx: ${txHash.slice(0, 20)}…`);
+      results.push({ ruleId: rule.id, status: "executed", txHash, amount: execAmountStr, asset: assetCode, destination });
 
     } catch (txErr: any) {
       console.error(`[Processor] ✗ Tx failed for rule ${rule.id}:`, txErr?.message ?? txErr);

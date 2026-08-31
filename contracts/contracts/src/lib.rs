@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, token, Address, Env};
+use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, token, Address, Env};
 
 #[contract]
 pub struct AutopilotVault;
@@ -22,6 +22,12 @@ impl AutopilotVault {
         env.storage().instance().set(&DataKey::Owner, &owner);
         env.storage().instance().set(&DataKey::Engine, &engine);
         env.storage().instance().set(&DataKey::IsInitialized, &true);
+
+        // Emit an event so initialization is auditable on-chain
+        env.events().publish(
+            (symbol_short!("init"), owner.clone()),
+            engine.clone(),
+        );
     }
 
     /// Get the owner address
@@ -45,6 +51,12 @@ impl AutopilotVault {
         // Transfer funds from contract to owner
         let client = token::Client::new(&env, &token_address);
         client.transfer(&env.current_contract_address(), &owner, &amount);
+
+        // Emit an event so the withdrawal is auditable on-chain
+        env.events().publish(
+            (symbol_short!("withdraw"), owner.clone()),
+            (token_address.clone(), amount),
+        );
     }
 
     /// Engine execute - allow engine to execute rule-based withdrawals
@@ -57,6 +69,12 @@ impl AutopilotVault {
         // Transfer funds from contract to owner
         let client = token::Client::new(&env, &token_address);
         client.transfer(&env.current_contract_address(), &owner, &amount);
+
+        // Emit an event so engine-driven transfers are auditable on-chain
+        env.events().publish(
+            (symbol_short!("exec"), engine.clone()),
+            (owner.clone(), token_address.clone(), amount),
+        );
     }
 }
 

@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { verifyAuth } from "../middleware/auth";
 import { getDb } from "../lib/db";
 import { fetchRecentPayments, executeRuleTransaction, isPaymentAlreadyProcessed } from "../lib/engine";
+import { doesPaymentMatchTrigger, parseAssetCode } from "../engine/processor";
 import { getHorizon } from "../stellar/horizon";
 
 export default async function autopilotRoutes(server: FastifyInstance) {
@@ -89,18 +90,20 @@ export default async function autopilotRoutes(server: FastifyInstance) {
           const alreadyDone = await isPaymentAlreadyProcessed(payment.id, sql);
           if (alreadyDone) continue;
 
-          const paymentAmountXLM = parseFloat(payment.amount);
+          const paymentAmount = parseFloat(payment.amount);
+          // Rules execute in the same asset that was received.
+          const assetCode = parseAssetCode(payment.asset);
 
           for (const rule of rules) {
             const matches = doesPaymentMatchRule(payment, rule as any);
-            if (!matches) continue;
+            if (!matches || !assetCode) continue;
 
             const execAmount = rule.isPercentage
-              ? (rule.amount / 100) * paymentAmountXLM
+              ? (rule.amount / 100) * paymentAmount
               : rule.amount;
 
             if (execAmount <= 0.0000001) continue;
-            if (execAmount > paymentAmountXLM) continue;
+            if (execAmount > paymentAmount) continue;
 
             const execAmountStr = execAmount.toFixed(7);
 
@@ -114,10 +117,10 @@ export default async function autopilotRoutes(server: FastifyInstance) {
             }
 
             const destination = process.env.AUTOPILOT_PUBLIC_KEY!;
-            const memo = rule.memo ?? `AutoPilot: ${rule.action} ${execAmountStr} XLM`;
+            const memo = rule.memo ?? `AutoPilot: ${rule.action} ${execAmountStr} ${assetCode}`;
 
             try {
-              const txHash = await executeRuleTransaction(destination, execAmountStr, memo);
+              const txHash = await executeRuleTransaction(destination, execAmountStr, memo, assetCode);
 
               await sql`
                 INSERT INTO "AutomatedTransaction" (
@@ -197,16 +200,6 @@ function doesPaymentMatchRule(
   payment: { amount: string; asset: string; from: string },
   rule: { trigger: string; action: string }
 ): boolean {
-  const trigger = rule.trigger.toLowerCase();
-  const isXLM = payment.asset === "XLM";
-
-  if (
-    trigger.includes("every payment") ||
-    trigger.includes("payment received") ||
-    trigger.includes("receive") ||
-    trigger.includes("incoming")
-  ) {
-    return isXLM;
-  }
-  return false;
+  // Shared with the streaming/queue path so XLM and USDC are matched identically.
+  return doesPaymentMatchTrigger(rule.trigger, payment.asset);
 }

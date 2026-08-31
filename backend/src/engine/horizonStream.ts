@@ -43,7 +43,7 @@ async function openStream(userId: string, publicKey: string) {
       .cursor(cursor)
       .stream({
         onmessage: async (record: any) => {
-          // We only care about incoming native payments to this wallet
+          // We only care about incoming payments to this wallet (XLM or USDC)
           if (record.type !== "payment") return;
           if (record.to !== publicKey) return;
 

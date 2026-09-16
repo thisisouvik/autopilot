@@ -1,4 +1,5 @@
 #![cfg(test)]
+#![allow(deprecated)]
 
 use super::*;
 use soroban_sdk::{
@@ -10,15 +11,15 @@ use soroban_sdk::{
 fn test_initialize() {
     let env = Env::default();
     env.mock_all_auths();
-    
+
     let contract_id = env.register_contract(None, AutopilotVault);
     let client = AutopilotVaultClient::new(&env, &contract_id);
-    
+
     let owner = Address::generate(&env);
     let engine = Address::generate(&env);
-    
+
     client.initialize(&owner, &engine);
-    
+
     assert_eq!(client.get_owner(), owner);
     assert_eq!(client.get_engine(), engine);
 }
@@ -28,13 +29,13 @@ fn test_initialize() {
 fn test_initialize_already_initialized() {
     let env = Env::default();
     env.mock_all_auths();
-    
+
     let contract_id = env.register_contract(None, AutopilotVault);
     let client = AutopilotVaultClient::new(&env, &contract_id);
-    
+
     let owner = Address::generate(&env);
     let engine = Address::generate(&env);
-    
+
     client.initialize(&owner, &engine);
     client.initialize(&owner, &engine);
 }
@@ -43,27 +44,29 @@ fn test_initialize_already_initialized() {
 fn test_withdraw() {
     let env = Env::default();
     env.mock_all_auths();
-    
+
     let owner = Address::generate(&env);
     let engine = Address::generate(&env);
-    
+
     let contract_id = env.register_contract(None, AutopilotVault);
     let client = AutopilotVaultClient::new(&env, &contract_id);
-    
+
     client.initialize(&owner, &engine);
-    
+
     // Create token
     let token_admin = Address::generate(&env);
-    let token_address = env.register_stellar_asset_contract_v2(token_admin).address();
+    let token_address = env
+        .register_stellar_asset_contract_v2(token_admin)
+        .address();
     let token_client = token::Client::new(&env, &token_address);
     let token_admin_client = token::StellarAssetClient::new(&env, &token_address);
-    
+
     // Mint token to contract
     token_admin_client.mint(&contract_id, &1000);
     assert_eq!(token_client.balance(&contract_id), 1000);
-    
+
     client.withdraw(&500, &token_address);
-    
+
     assert_eq!(token_client.balance(&contract_id), 500);
     assert_eq!(token_client.balance(&owner), 500);
 }
@@ -72,27 +75,29 @@ fn test_withdraw() {
 fn test_engine_execute() {
     let env = Env::default();
     env.mock_all_auths();
-    
+
     let owner = Address::generate(&env);
     let engine = Address::generate(&env);
-    
+
     let contract_id = env.register_contract(None, AutopilotVault);
     let client = AutopilotVaultClient::new(&env, &contract_id);
-    
+
     client.initialize(&owner, &engine);
-    
+
     // Create token
     let token_admin = Address::generate(&env);
-    let token_address = env.register_stellar_asset_contract_v2(token_admin).address();
+    let token_address = env
+        .register_stellar_asset_contract_v2(token_admin)
+        .address();
     let token_client = token::Client::new(&env, &token_address);
     let token_admin_client = token::StellarAssetClient::new(&env, &token_address);
-    
+
     // Mint token to contract
     token_admin_client.mint(&contract_id, &1000);
     assert_eq!(token_client.balance(&contract_id), 1000);
-    
+
     client.engine_execute(&300, &token_address);
-    
+
     assert_eq!(token_client.balance(&contract_id), 700);
     assert_eq!(token_client.balance(&owner), 300);
 }
@@ -129,15 +134,19 @@ fn test_vault_survives_long_inactivity() {
     client.initialize(&owner, &engine);
 
     // Advance ~20 days of ledgers, then keep the vault alive without a withdrawal
-    env.ledger().set_sequence_number(env.ledger().sequence() + 17280 * 20);
+    env.ledger()
+        .set_sequence_number(env.ledger().sequence() + 17280 * 20);
     client.extend_ttl();
 
     // Another ~20 days: the vault is still reachable because of the bump above
-    env.ledger().set_sequence_number(env.ledger().sequence() + 17280 * 20);
+    env.ledger()
+        .set_sequence_number(env.ledger().sequence() + 17280 * 20);
     assert_eq!(client.get_owner(), owner);
 
     let token_admin = Address::generate(&env);
-    let token_address = env.register_stellar_asset_contract_v2(token_admin).address();
+    let token_address = env
+        .register_stellar_asset_contract_v2(token_admin)
+        .address();
     let token_client = token::Client::new(&env, &token_address);
     let token_admin_client = token::StellarAssetClient::new(&env, &token_address);
     token_admin_client.mint(&contract_id, &1000);

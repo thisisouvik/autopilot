@@ -113,9 +113,7 @@ jobs:
         working-directory: contracts
 
       - name: Install stellar-cli
-        uses: stellar/actions/setup-stellar-cli@main
-        with:
-          version: latest
+        run: cargo install --locked stellar-cli
 
       - name: Build contract (WASM)
         run: stellar contract build

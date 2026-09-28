@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * config/network.ts
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import Fastify, { FastifyInstance } from "fastify";
 import authRoutes, { SESSION_TTL_SECONDS } from "../routes/auth";

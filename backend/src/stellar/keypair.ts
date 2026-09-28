@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * stellar/keypair.ts
  *

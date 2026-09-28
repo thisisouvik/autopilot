@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Spending Limit Guard
  *

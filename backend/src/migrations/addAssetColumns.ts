@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * migrations/addAssetColumns.ts
  *

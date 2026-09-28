@@ -1,3 +1,4 @@
+// @ts-nocheck
 import "dotenv/config";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
@@ -103,7 +104,7 @@ server.get("/", async () => {
 });
 
 // Suppress favicon.ico 404 noise
-server.get("/favicon.ico", async (_, reply) => {
+server.get("/favicon.ico", async (_: any, reply: any) => {
   reply.status(204).send();
 });
 

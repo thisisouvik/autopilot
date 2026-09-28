@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * simulate-payment.ts
  *

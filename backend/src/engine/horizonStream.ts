@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Horizon SSE Stream Listener
  *

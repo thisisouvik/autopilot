@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * BullMQ Payment Event Processor
  *

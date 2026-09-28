@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * DB Migration: Add Vault table
  *

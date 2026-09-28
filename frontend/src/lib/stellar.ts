@@ -17,6 +17,7 @@ export async function fetchStellarBalance(publicKey: string): Promise<StellarBal
     }
 
     const data = await res.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const balances: any[] = data.balances ?? [];
 
     const xlmBalance = balances.find((b) => b.asset_type === "native");

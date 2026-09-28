@@ -113,7 +113,7 @@ jobs:
         working-directory: contracts
 
       - name: Install stellar-cli
-        uses: stellar/setup-stellar-cli@main
+        uses: stellar/actions/setup-stellar-cli@main
         with:
           version: latest
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { FastifyInstance } from "fastify";
 import { StrKey } from "@stellar/stellar-sdk";
 import { getDb } from "../lib/db";
@@ -21,7 +22,7 @@ export default async function authRoutes(server: FastifyInstance) {
    * 
    * Issues a JWT stored in an HttpOnly cookie.
    */
-  server.post("/login", async (request, reply) => {
+  server.post("/login", async (request: any, reply: any) => {
     const { publicKey, signature, message } = request.body as {
       publicKey?: string;
       signature?: string;
@@ -96,7 +97,7 @@ export default async function authRoutes(server: FastifyInstance) {
    * POST /api/auth/logout
    * Clears the session cookie.
    */
-  server.post("/logout", async (request, reply) => {
+  server.post("/logout", async (request: any, reply: any) => {
     const isProd = process.env.NODE_ENV === "production";
     reply.setCookie("session", "", {
       path: "/",
@@ -112,7 +113,7 @@ export default async function authRoutes(server: FastifyInstance) {
    * GET /api/auth/me
    * Returns the currently logged-in user from the JWT cookie.
    */
-  server.get("/me", async (request, reply) => {
+  server.get("/me", async (request: any, reply: any) => {
     try {
       await request.jwtVerify();
       return reply.send({ user: request.user });

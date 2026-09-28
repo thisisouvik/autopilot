@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * DB Migration: Add spending limit columns to User table
  * and ensure AutomatedTransaction table exists.

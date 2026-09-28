@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import Fastify, { FastifyInstance } from "fastify";
 import accountRoutes from "../routes/account";

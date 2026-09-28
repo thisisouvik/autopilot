@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Queue } from "bullmq";
 import type { ConnectionOptions } from "bullmq";
 

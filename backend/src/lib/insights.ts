@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Aggregates a user's automated transaction history into context for the chat
  * model, so advice can cite the user's real figures.

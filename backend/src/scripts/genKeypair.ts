@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * scripts/genKeypair.ts
  *

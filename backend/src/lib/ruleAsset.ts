@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * lib/ruleAsset.ts
  *

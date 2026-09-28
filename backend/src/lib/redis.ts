@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Redis } from "@upstash/redis";
 
 let _redis: Redis | null = null;

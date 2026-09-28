@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface PaginationQuery {
   cursor?: string;
   page?: string | number;

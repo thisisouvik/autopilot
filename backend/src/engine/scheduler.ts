@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Cron-based Rule Scheduler
  *

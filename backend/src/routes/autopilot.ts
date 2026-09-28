@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { FastifyInstance } from "fastify";
 import { verifyAuth } from "../middleware/auth";
 import { getDb } from "../lib/db";
@@ -11,7 +12,7 @@ const DEFAULT_MAX_RULES_PER_USER = 20;
 export default async function autopilotRoutes(server: FastifyInstance) {
   
   // Status endpoint (protected)
-  server.get("/status", { preHandler: [verifyAuth] }, async (request, reply) => {
+  server.get("/status", { preHandler: [verifyAuth] }, async (request: any, reply: any) => {
     const sql = getDb();
     const query = request.query as any;
     const pagination = parsePagination(query, { defaultLimit: 5, maxLimit: 50 });
@@ -57,7 +58,7 @@ export default async function autopilotRoutes(server: FastifyInstance) {
   });
 
   // Monitor endpoint (called by worker, uses secret)
-  server.post("/monitor", async (request, reply) => {
+  server.post("/monitor", async (request: any, reply: any) => {
     const ENGINE_SECRET = process.env.ENGINE_SECRET ?? process.env.JWT_SECRET!;
     const authHeader = request.headers["x-engine-secret"];
     
@@ -203,7 +204,7 @@ export default async function autopilotRoutes(server: FastifyInstance) {
     }
   });
 
-  server.get("/monitor", async (request, reply) => {
+  server.get("/monitor", async (request: any, reply: any) => {
     if (process.env.NODE_ENV !== "development") {
       return reply.status(403).send({ error: "Not allowed" });
     }

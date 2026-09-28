@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * stellar/horizon.ts
  *

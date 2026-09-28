@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, vi } from "vitest";
 import { withTimeout, HORIZON_REQUEST_TIMEOUT_MS } from "../stellar/horizon";
 

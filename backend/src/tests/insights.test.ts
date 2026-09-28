@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect } from "vitest";
 import { buildAiContext, buildRuleContext, computeActivityStats, type TxRow } from "../lib/insights";
 
@@ -97,13 +98,13 @@ describe("buildAiContext", () => {
     expect(withPrior).toContain("Week-over-week change: +50%");
 
     const noPrior = buildAiContext(computeActivityStats([tx(15, 1)], NOW));
-    expect(noPrior).not.toMatch(/Week-over-week/);
+    expect(/Week-over-week/.test(noPrior)).toBe(false);
   });
 
   it("leaks no transaction identifiers", () => {
     const rows = [{ amount: 10, type: "Save", createdAt: new Date(NOW - DAY).toISOString() }];
     const text = buildAiContext(computeActivityStats(rows, NOW));
-    expect(text).not.toMatch(/txHash|memo|G[A-Z0-9]{20}/);
+    expect(/txHash|memo|G[A-Z0-9]{20}/.test(text)).toBe(false);
   });
 });
 

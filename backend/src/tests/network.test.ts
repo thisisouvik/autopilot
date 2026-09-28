@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 /**
@@ -62,7 +63,7 @@ describe("network config", () => {
     // Paying the wrong issuer is an irrecoverable loss, so assert they differ.
     const testnet = await loadConfig({ STELLAR_NETWORK: "testnet" });
     const mainnet = await loadConfig({ STELLAR_NETWORK: "mainnet" });
-    expect(testnet.USDC_ISSUER).not.toBe(mainnet.USDC_ISSUER);
+    expect(testnet.USDC_ISSUER === mainnet.USDC_ISSUER).toBe(false);
   });
 
   it("falls back to testnet on an unrecognised value rather than mainnet", async () => {

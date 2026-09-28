@@ -32,7 +32,7 @@ export async function verifyToken(token: string) {
       clockTolerance: CLOCK_TOLERANCE_SECONDS,
     });
     return payload as { publicKey: string; iat: number; exp: number };
-  } catch (error) {
+  } catch {
     return null;
   }
 }

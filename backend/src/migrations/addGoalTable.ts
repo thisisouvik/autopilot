@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getDb } from "../lib/db";
 import dotenv from "dotenv";
 

@@ -76,7 +76,7 @@ export default async function GoalsPage() {
       amount: Number(t.amount ?? 0),
       type: t.type ?? "Other",
       ruleId: t.ruleId ?? t.rule_id ?? null,
-      createdAt: new Date(t.createdAt ?? t.created_at ?? Date.now()).toISOString(),
+      createdAt: new Date(t.createdAt ?? t.created_at).toISOString(),
     }));
 
   return (

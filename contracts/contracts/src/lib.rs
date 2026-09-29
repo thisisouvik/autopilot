@@ -7,7 +7,9 @@ use soroban_sdk::{
 #[contract]
 pub struct AutopilotVault;
 
-const INSTANCE_TTL_LEDGERS: u32 = 17_280 * 30;
+pub const DAY_IN_LEDGERS: u32 = 17_280;
+pub const THIRTY_DAYS_IN_LEDGERS: u32 = 17_280 * 30;
+pub const INSTANCE_TTL_LEDGERS: u32 = THIRTY_DAYS_IN_LEDGERS;
 
 #[contracttype]
 #[derive(Clone)]
@@ -30,22 +32,20 @@ impl AutopilotVault {
         env.storage().instance().set(&DataKey::Engine, &engine);
         env.storage().instance().set(&DataKey::Paused, &false);
         env.storage().instance().set(&DataKey::IsInitialized, &true);
+        env.events()
+            .publish((symbol_short!("init"),), (owner, engine));
         Self::bump_ttl(&env);
     }
 
     /// Get the owner address
     pub fn get_owner(env: Env) -> Address {
-        env.storage()
-            .instance()
-            .extend_ttl(DAY_IN_LEDGERS, THIRTY_DAYS_IN_LEDGERS);
+        Self::bump_ttl(&env);
         env.storage().instance().get(&DataKey::Owner).unwrap()
     }
 
     /// Get the engine address
     pub fn get_engine(env: Env) -> Address {
-        env.storage()
-            .instance()
-            .extend_ttl(DAY_IN_LEDGERS, THIRTY_DAYS_IN_LEDGERS);
+        Self::bump_ttl(&env);
         env.storage().instance().get(&DataKey::Engine).unwrap()
     }
 
@@ -98,6 +98,7 @@ impl AutopilotVault {
 
     /// Withdraw funds - only the owner can withdraw
     pub fn withdraw(env: Env, amount: i128, token_address: Address) {
+        Self::check_not_paused(&env);
         if amount <= 0 {
             panic!("Amount must be positive");
         }
@@ -124,12 +125,19 @@ impl AutopilotVault {
         token_address: Address,
         memo: String,
     ) -> bool {
+        Self::check_not_paused(&env);
         if amount <= 0 {
             panic!("Amount must be positive");
         }
 
         let engine: Address = env.storage().instance().get(&DataKey::Engine).unwrap();
         engine.require_auth();
+
+        if let Some(limit) = env.storage().instance().get::<_, i128>(&DataKey::SpendLimit) {
+            if amount > limit {
+                panic!("Amount exceeds spend limit");
+            }
+        }
 
         let client = token::Client::new(&env, &token_address);
         client.transfer(&env.current_contract_address(), &recipient, &amount);

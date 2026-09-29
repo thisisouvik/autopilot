@@ -16,7 +16,8 @@
     "e2e": "tsx src/scripts/e2e.ts",
     "migrate:limits": "tsx src/migrations/addLimitsAndTxTable.ts",
     "migrate:asset": "tsx src/migrations/addAssetColumns.ts",
-    "migrate:pagination": "tsx src/migrations/addPaginationIndexes.ts"
+    "migrate:pagination": "tsx src/migrations/addPaginationIndexes.ts",
+    "migrate:auth-challenge": "tsx src/migrations/addAuthChallengeTable.ts"
   },
   "keywords": [],
   "author": "",

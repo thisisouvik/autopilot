@@ -1,13 +1,14 @@
 // @ts-nocheck
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import Fastify, { FastifyInstance } from "fastify";
-import authRoutes, { SESSION_TTL_SECONDS } from "../routes/auth";
+import { Keypair } from "@stellar/stellar-sdk";
+import authRoutes, {
+  AUTH_CHALLENGE_TTL_SECONDS,
+  SESSION_TTL_SECONDS,
+  hashStellarSignedMessage,
+} from "../routes/auth";
 import { verifyAuth } from "../middleware/auth";
 
-// ── DB mock ──────────────────────────────────────────────────────────────────
-// The login route upserts the user through getDb() (neon). Stubbing the module
-// lets each test script exactly which row the route "sees" so we can exercise
-// the login success path deterministically without a database.
 const { mockSql, mockCheckRateLimit } = vi.hoisted(() => ({
   mockSql: vi.fn(),
   mockCheckRateLimit: vi.fn(),
@@ -21,15 +22,26 @@ vi.mock("../lib/redis", () => ({
   checkRateLimit: mockCheckRateLimit,
 }));
 
-const PUBLIC_KEY = "GCWVJI2QBJQXNJIOU5PAZEAHQFNZGZMQFAF36C2YSF4X4YLQTISN3BQR";
+const TEST_KEYPAIR = Keypair.fromSecret(
+  "SAKICEVQLYWGSOJS4WW7HZJWAHZVEEBS527LHK5V4MLJALYKICQCJXMW",
+);
+const PUBLIC_KEY = TEST_KEYPAIR.publicKey();
+const USER = {
+  id: "11111111-1111-4111-8111-111111111111",
+  publicKey: PUBLIC_KEY,
+};
+const CHALLENGE_ID = "22222222-2222-4222-8222-222222222222";
 
-// Helper: decode the JWT payload (base64url) without extra dependencies.
 function decodePayload(token: string): { iat: number; exp: number; id: string; publicKey: string } {
   const [, body] = token.split(".");
   return JSON.parse(Buffer.from(body, "base64url").toString());
 }
 
-describe("AutoPilot Auth Token Expiry Tests", () => {
+function signChallenge(message: string, keypair = TEST_KEYPAIR): string {
+  return keypair.sign(hashStellarSignedMessage(message)).toString("base64");
+}
+
+describe("AutoPilot signed wallet authentication", () => {
   let server: FastifyInstance;
 
   beforeAll(async () => {
@@ -45,13 +57,9 @@ describe("AutoPilot Auth Token Expiry Tests", () => {
     await server.register(import("@fastify/cookie"));
 
     server.register(authRoutes, { prefix: "/api/auth" });
-
-    // A minimal protected route that exercises the real verifyAuth middleware,
-    // so we can probe token acceptance/rejection (expiry + clock tolerance)
-    // without touching the database.
-    server.get("/protected", { preHandler: [verifyAuth] }, async (request) => {
-      return { user: request.user };
-    });
+    server.get("/protected", { preHandler: [verifyAuth] }, async (request) => ({
+      user: request.user,
+    }));
 
     await server.ready();
   });
@@ -63,169 +71,232 @@ describe("AutoPilot Auth Token Expiry Tests", () => {
   beforeEach(() => {
     mockSql.mockReset();
     mockCheckRateLimit.mockReset();
-    // Default: rate limit allows the request (mirrors no-Redis fallback).
     mockCheckRateLimit.mockResolvedValue({ allowed: true, remaining: 10 });
   });
 
-  // ── Success path ──────────────────────────────────────────────────────────
-  it("login issues a session cookie whose JWT lifetime and Max-Age both equal SESSION_TTL_SECONDS", async () => {
-    mockSql.mockResolvedValueOnce([
-      { id: "11111111-1111-4111-8111-111111111111", publicKey: PUBLIC_KEY },
-    ]);
+  it("matches the official SEP-53 message-signing test vector", () => {
+    const signature = Buffer.from(
+      "fO5dbYhXUhBMhe6kId/cuVq/AfEnHRHEvsP8vXh03M1uLpi5e46yO2Q8rEBzu3feXQewcQE5GArp88u6ePK6BA==",
+      "base64",
+    );
 
+    expect(PUBLIC_KEY).toBe("GBXFXNDLV4LSWA4VB7YIL5GBD7BVNR22SGBTDKMO2SBZZHDXSKZYCP7L");
+    expect(TEST_KEYPAIR.verify(hashStellarSignedMessage("Hello, World!"), signature)).toBe(true);
+  });
+
+  it("creates a short-lived challenge bound to the requested public key", async () => {
+    mockSql.mockResolvedValueOnce([]);
+
+    const before = Date.now();
+    const response = await server.inject({
+      method: "POST",
+      url: "/api/auth/challenge",
+      payload: { publicKey: PUBLIC_KEY },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = JSON.parse(response.payload);
+    expect(body.challengeId).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(body.message).toContain(`Public key: ${PUBLIC_KEY}`);
+    expect(body.message).toContain("Sign in to AutoPilot");
+    expect(new Date(body.expiresAt).getTime() - before).toBeGreaterThan(
+      (AUTH_CHALLENGE_TTL_SECONDS - 2) * 1000,
+    );
+    expect(mockSql).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects a public-key-only login without querying the database", async () => {
     const response = await server.inject({
       method: "POST",
       url: "/api/auth/login",
       payload: { publicKey: PUBLIC_KEY },
     });
 
+    expect(response.statusCode).toBe(400);
+    expect(JSON.parse(response.payload).error).toMatch(/challengeId and signature are required/i);
+    expect(mockSql).not.toHaveBeenCalled();
+  });
+
+  it("issues a session only after a valid SEP-53 challenge signature", async () => {
+    const message = `Sign in to AutoPilot\nPublic key: ${PUBLIC_KEY}\nNonce: valid`;
+    mockSql
+      .mockResolvedValueOnce([{ message }])
+      .mockResolvedValueOnce([USER]);
+
+    const response = await server.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: {
+        publicKey: PUBLIC_KEY,
+        challengeId: CHALLENGE_ID,
+        signature: signChallenge(message),
+      },
+    });
+
     expect(response.statusCode).toBe(200);
-    const body = JSON.parse(response.payload);
-    expect(body.success).toBe(true);
+    expect(JSON.parse(response.payload)).toEqual({ success: true, user: USER });
 
     const setCookie = response.headers["set-cookie"] as string;
-    expect(setCookie).toBeDefined();
     expect(setCookie).toContain("session=");
     expect(setCookie).toMatch(/Max-Age=604800/);
     expect(setCookie).toMatch(/HttpOnly/);
 
-    // The JWT lifespan must be exactly the shared session TTL — no more, no less.
     const token = setCookie.split(";")[0].split("=")[1];
     const payload = decodePayload(token);
-    expect(typeof payload.iat).toBe("number");
     expect(payload.exp - payload.iat).toBe(SESSION_TTL_SECONDS);
   });
 
-  it("login succeeds with a freshly upserted user (id + publicKey returned)", async () => {
-    mockSql.mockResolvedValueOnce([
-      { id: "11111111-1111-4111-8111-111111111111", publicKey: PUBLIC_KEY },
-    ]);
+  it("rejects a signature made by a different Stellar key", async () => {
+    const message = `Sign in to AutoPilot\nPublic key: ${PUBLIC_KEY}\nNonce: wrong-signer`;
+    mockSql.mockResolvedValueOnce([{ message }]);
 
     const response = await server.inject({
       method: "POST",
       url: "/api/auth/login",
+      payload: {
+        publicKey: PUBLIC_KEY,
+        challengeId: CHALLENGE_ID,
+        signature: signChallenge(message, Keypair.random()),
+      },
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(JSON.parse(response.payload).error).toBe("Invalid wallet signature");
+    expect(mockSql).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects an expired, mismatched, or already-consumed challenge", async () => {
+    mockSql.mockResolvedValueOnce([]);
+
+    const response = await server.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: {
+        publicKey: PUBLIC_KEY,
+        challengeId: CHALLENGE_ID,
+        signature: Buffer.alloc(64).toString("base64"),
+      },
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(JSON.parse(response.payload).error).toMatch(/expired|already used/i);
+  });
+
+  it("prevents replay by accepting the same challenge only once", async () => {
+    const message = `Sign in to AutoPilot\nPublic key: ${PUBLIC_KEY}\nNonce: one-time`;
+    const payload = {
+      publicKey: PUBLIC_KEY,
+      challengeId: CHALLENGE_ID,
+      signature: signChallenge(message),
+    };
+    mockSql
+      .mockResolvedValueOnce([{ message }])
+      .mockResolvedValueOnce([USER])
+      .mockResolvedValueOnce([]);
+
+    const first = await server.inject({ method: "POST", url: "/api/auth/login", payload });
+    const replay = await server.inject({ method: "POST", url: "/api/auth/login", payload });
+
+    expect(first.statusCode).toBe(200);
+    expect(replay.statusCode).toBe(401);
+  });
+
+  it("fails closed with 503 when challenge persistence is unavailable", async () => {
+    mockSql.mockRejectedValueOnce(new Error("database unavailable"));
+
+    const response = await server.inject({
+      method: "POST",
+      url: "/api/auth/challenge",
       payload: { publicKey: PUBLIC_KEY },
     });
 
-    expect(response.statusCode).toBe(200);
-    const body = JSON.parse(response.payload);
-    expect(body.user.publicKey).toBe(PUBLIC_KEY);
-    expect(body.user.id).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(response.statusCode).toBe(503);
+    expect(JSON.parse(response.payload).error).toMatch(/temporarily unavailable/i);
   });
 
-  // ── Failure paths ─────────────────────────────────────────────────────────
-  it("returns 400 when publicKey is missing", async () => {
+  it("fails closed with 503 when the one-time challenge cannot be consumed", async () => {
+    mockSql.mockRejectedValueOnce(new Error("database unavailable"));
+
     const response = await server.inject({
       method: "POST",
       url: "/api/auth/login",
+      payload: {
+        publicKey: PUBLIC_KEY,
+        challengeId: CHALLENGE_ID,
+        signature: Buffer.alloc(64).toString("base64"),
+      },
+    });
+
+    expect(response.statusCode).toBe(503);
+    expect(JSON.parse(response.payload).error).toMatch(/temporarily unavailable/i);
+  });
+
+  it("validates challenge and login request fields", async () => {
+    const missingKey = await server.inject({
+      method: "POST",
+      url: "/api/auth/challenge",
       payload: {},
     });
-
-    expect(response.statusCode).toBe(400);
-    expect(JSON.parse(response.payload).error).toBe("publicKey is required");
-  });
-
-  it("returns 400 for a malformed Stellar public key", async () => {
-    const response = await server.inject({
+    const malformedKey = await server.inject({
       method: "POST",
-      url: "/api/auth/login",
+      url: "/api/auth/challenge",
       payload: { publicKey: "NOT-A-STELLAR-KEY" },
     });
-
-    expect(response.statusCode).toBe(400);
-    expect(JSON.parse(response.payload).error).toMatch(/Invalid Stellar public key/);
-  });
-
-  it("returns 401 on /me when no session cookie is present", async () => {
-    const response = await server.inject({ method: "GET", url: "/api/auth/me" });
-    expect(response.statusCode).toBe(401);
-    expect(JSON.parse(response.payload).error).toBe("Not authenticated");
-  });
-
-  it("a signature supplied without a message (or vice-versa) skips verification and still logs in", async () => {
-    mockSql.mockResolvedValueOnce([
-      { id: "11111111-1111-4111-8111-111111111111", publicKey: PUBLIC_KEY },
-    ]);
-
-    const response = await server.inject({
+    const malformedChallengeId = await server.inject({
       method: "POST",
       url: "/api/auth/login",
-      payload: { publicKey: PUBLIC_KEY, signature: "only-a-signature" },
+      payload: { publicKey: PUBLIC_KEY, challengeId: "not-a-uuid", signature: "invalid" },
     });
 
-    expect(response.statusCode).toBe(200);
+    expect(missingKey.statusCode).toBe(400);
+    expect(malformedKey.statusCode).toBe(400);
+    expect(malformedChallengeId.statusCode).toBe(400);
+    expect(mockSql).not.toHaveBeenCalled();
   });
 
-  it("an invalid wallet signature (both signature + message present) is rejected with 401", async () => {
-    // A 64-byte garbage signature (correct length for ed25519) that will never verify.
-    const garbageSig = Buffer.alloc(64, 0xab).toString("base64");
-    const response = await server.inject({
-      method: "POST",
-      url: "/api/auth/login",
-      payload: { publicKey: PUBLIC_KEY, signature: garbageSig, message: "hello" },
-    });
-
-    expect(response.statusCode).toBe(401);
-    expect(JSON.parse(response.payload).error).toMatch(/Invalid wallet signature|Signature verification failed/i);
-  });
-
-  it("returns 429 when the login rate limit is exceeded", async () => {
+  it("rate limits login attempts before consuming a challenge", async () => {
     mockCheckRateLimit.mockResolvedValueOnce({ allowed: false, remaining: 0 });
 
     const response = await server.inject({
       method: "POST",
       url: "/api/auth/login",
-      payload: { publicKey: PUBLIC_KEY },
+      payload: {
+        publicKey: PUBLIC_KEY,
+        challengeId: CHALLENGE_ID,
+        signature: Buffer.alloc(64).toString("base64"),
+      },
     });
 
     expect(response.statusCode).toBe(429);
-    expect(JSON.parse(response.payload).error).toMatch(/Too many login attempts/i);
+    expect(mockSql).not.toHaveBeenCalled();
   });
 
-  it("GET /me returns the JWT user when authenticated", async () => {
-    const token = server.jwt.sign({ id: "1", publicKey: PUBLIC_KEY }, { expiresIn: "1h" });
+  it("GET /me returns 401 without a session and returns the JWT user with one", async () => {
+    const unauthenticated = await server.inject({ method: "GET", url: "/api/auth/me" });
+    expect(unauthenticated.statusCode).toBe(401);
 
-    const response = await server.inject({
+    const token = server.jwt.sign({ id: USER.id, publicKey: PUBLIC_KEY }, { expiresIn: "1h" });
+    const authenticated = await server.inject({
       method: "GET",
       url: "/api/auth/me",
       cookies: { session: token },
     });
 
-    expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.payload).user.publicKey).toBe(PUBLIC_KEY);
+    expect(authenticated.statusCode).toBe(200);
+    expect(JSON.parse(authenticated.payload).user.publicKey).toBe(PUBLIC_KEY);
   });
 
-  it("logout clears the session cookie (Max-Age=0)", async () => {
+  it("logout clears the session cookie", async () => {
     const response = await server.inject({ method: "POST", url: "/api/auth/logout" });
-
     expect(response.statusCode).toBe(200);
-    const setCookie = response.headers["set-cookie"] as string;
-    expect(setCookie).toContain("session=");
-    expect(setCookie).toMatch(/Max-Age=0/);
+    expect(response.headers["set-cookie"]).toMatch(/Max-Age=0/);
   });
 
-  // ── Edge cases ────────────────────────────────────────────────────────────
-  it("verifyAuth accepts a token that is still within its lifetime (no premature logout)", async () => {
-    const token = server.jwt.sign({ id: "1", publicKey: PUBLIC_KEY }, { expiresIn: "1h" });
-
-    const response = await server.inject({
-      method: "GET",
-      url: "/protected",
-      cookies: { session: token },
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.payload).user.publicKey).toBe(PUBLIC_KEY);
-  });
-
-  it("verifyAuth returns 401 once the token is genuinely expired (exp passed)", async () => {
-    // Sign a token that expires in the past — this is the ONE case that SHOULD
-    // log the user out. Anything earlier than this is a premature logout.
+  it("verifyAuth rejects an expired token", async () => {
     const expiredToken = server.jwt.sign(
-      { id: "1", publicKey: PUBLIC_KEY },
-      { expiresIn: -10 } // negative => already expired
+      { id: USER.id, publicKey: PUBLIC_KEY },
+      { expiresIn: -10 },
     );
-
     const response = await server.inject({
       method: "GET",
       url: "/protected",

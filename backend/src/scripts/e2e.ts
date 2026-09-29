@@ -1,6 +1,7 @@
 // @ts-nocheck
 import Fastify from "fastify";
 import dotenv from "dotenv";
+import { createHash } from "node:crypto";
 import { getDb } from "../lib/db";
 import { Keypair } from "@stellar/stellar-sdk";
 
@@ -37,10 +38,26 @@ async function runE2E() {
   try {
     // 1. Test Login (Creates Account in DB)
     console.log("1️⃣  Testing User Creation / Login...");
+    const challengeRes = await server.inject({
+      method: "POST",
+      url: "/api/auth/challenge",
+      payload: { publicKey },
+    });
+    if (challengeRes.statusCode !== 200) throw new Error(`Challenge failed: ${challengeRes.payload}`);
+    const challenge = JSON.parse(challengeRes.payload);
+    const messageHash = createHash("sha256")
+      .update("Stellar Signed Message:\n", "utf8")
+      .update(challenge.message, "utf8")
+      .digest();
+
     const loginRes = await server.inject({
       method: "POST",
       url: "/api/auth/login",
-      payload: { publicKey },
+      payload: {
+        publicKey,
+        challengeId: challenge.challengeId,
+        signature: testKp.sign(messageHash).toString("base64"),
+      },
     });
     
     if (loginRes.statusCode !== 200) throw new Error(`Login failed: ${loginRes.payload}`);

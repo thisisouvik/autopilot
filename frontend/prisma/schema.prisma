@@ -48,3 +48,14 @@ model AutomatedTransaction {
   user      User     @relation(fields: [userId], references: [id])
   rule      Rule?    @relation(fields: [ruleId], references: [id])
 }
+
+model AuthChallenge {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  publicKey String
+  message   String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([publicKey])
+  @@index([expiresAt])
+}

@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { isConnected, requestAccess } from "@stellar/freighter-api";
+import { isConnected, requestAccess, signMessage } from "@stellar/freighter-api";
 import { Loader2, Wallet, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { NETWORK_LABEL } from "@/lib/network";
@@ -38,17 +38,42 @@ export default function OnboardingPage() {
       // 2. Request access (this will prompt the user if not already allowed)
       const accessRes = await requestAccess();
       if (accessRes.error || !accessRes.address) {
-        throw new Error(accessRes.error || "Could not retrieve public key. Please approve the connection in Freighter.");
+        throw new Error(
+          accessRes.error?.message ||
+            "Could not retrieve public key. Please approve the connection in Freighter.",
+        );
       }
       const publicKey = accessRes.address;
 
-      // 2. Call backend to authenticate
+      // 3. Ask the backend for a short-lived message bound to this wallet.
+      const challengeResponse = await fetch("/api/auth/challenge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publicKey }),
+      });
+      const challenge = await challengeResponse.json();
+      if (!challengeResponse.ok) {
+        throw new Error(challenge.error || "Could not start wallet authentication.");
+      }
+
+      // 4. Freighter signs the challenge using SEP-53 after explicit approval.
+      const signed = await signMessage(challenge.message, { address: publicKey });
+      if (signed.error || !signed.signedMessage) {
+        throw new Error(signed.error?.message || "Please approve the sign-in request in Freighter.");
+      }
+      if (signed.signerAddress !== publicKey) {
+        throw new Error("Freighter signed with a different account. Please reconnect the selected wallet.");
+      }
+
+      // 5. The backend consumes the challenge and issues a session only after verification.
       const response = await fetch("/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ publicKey }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          publicKey,
+          challengeId: challenge.challengeId,
+          signature: signed.signedMessage,
+        }),
       });
 
       const data = await response.json();
@@ -57,7 +82,7 @@ export default function OnboardingPage() {
         throw new Error(data.error || "Authentication failed.");
       }
 
-      // 3. On success, redirect to dashboard
+      // 6. On success, redirect to dashboard
       router.push("/");
     } catch (err: any) {
       console.error(err);

@@ -85,6 +85,7 @@ server.get("/", async () => {
     message: "This is the AutoPilot backend REST API. Open http://localhost:3000 to use the app.",
     endpoints: [
       "GET /health",
+      "POST /api/auth/challenge",
       "POST /api/auth/login",
       "POST /api/auth/logout",
       "GET /api/rules",

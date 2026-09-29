@@ -118,6 +118,7 @@ docker compose up -d postgres redis
 # Run DB migrations
 cd backend
 npm run migrate
+npm run migrate:auth-challenge
 
 # Start the development server
 npm run dev

@@ -3,7 +3,9 @@
 
 use super::*;
 use soroban_sdk::{
-    testutils::{storage::Instance as _, Address as _, Ledger as _, MockAuth, MockAuthInvoke},
+    testutils::{
+        storage::Instance as _, Address as _, Events as _, Ledger as _, MockAuth, MockAuthInvoke,
+    },
     token, Address, Env, IntoVal,
 };
 
@@ -269,10 +271,17 @@ fn test_engine_execute_without_auth_panics() {
     let env = Env::default();
     let vault = setup_vault(&env);
     let token_address = fund_vault(&env, &vault.contract_id, 1000);
+    let recipient = Address::generate(&env);
+    let memo = soroban_sdk::String::from_str(&env, "test");
 
     env.set_auths(&[]);
 
-    AutopilotVaultClient::new(&env, &vault.contract_id).engine_execute(&300, &token_address);
+    AutopilotVaultClient::new(&env, &vault.contract_id).engine_execute(
+        &recipient,
+        &300,
+        &token_address,
+        &memo,
+    );
 }
 
 #[test]
@@ -281,10 +290,18 @@ fn test_engine_execute_with_owner_auth_panics() {
     let env = Env::default();
     let vault = setup_vault(&env);
     let token_address = fund_vault(&env, &vault.contract_id, 1000);
+    let recipient = Address::generate(&env);
+    let memo = soroban_sdk::String::from_str(&env, "test");
 
     // The owner is a privileged address, but engine_execute() requires the
     // engine's signature specifically — owner auth must not be accepted.
-    let args = (300i128, token_address.clone()).into_val(&env);
+    let args = (
+        recipient.clone(),
+        300i128,
+        token_address.clone(),
+        memo.clone(),
+    )
+        .into_val(&env);
 
     AutopilotVaultClient::new(&env, &vault.contract_id)
         .mock_auths(&[MockAuth {
@@ -296,7 +313,7 @@ fn test_engine_execute_with_owner_auth_panics() {
                 sub_invokes: &[],
             },
         }])
-        .engine_execute(&300, &token_address);
+        .engine_execute(&recipient, &300, &token_address, &memo);
 }
 
 #[test]
@@ -305,8 +322,16 @@ fn test_engine_execute_with_engine_auth_succeeds() {
     let vault = setup_vault(&env);
     let token_address = fund_vault(&env, &vault.contract_id, 1000);
     let token_client = token::Client::new(&env, &token_address);
+    let recipient = Address::generate(&env);
+    let memo = soroban_sdk::String::from_str(&env, "test");
 
-    let args = (300i128, token_address.clone()).into_val(&env);
+    let args = (
+        recipient.clone(),
+        300i128,
+        token_address.clone(),
+        memo.clone(),
+    )
+        .into_val(&env);
     AutopilotVaultClient::new(&env, &vault.contract_id)
         .mock_auths(&[MockAuth {
             address: &vault.engine,
@@ -317,12 +342,11 @@ fn test_engine_execute_with_engine_auth_succeeds() {
                 sub_invokes: &[],
             },
         }])
-        .engine_execute(&300, &token_address);
+        .engine_execute(&recipient, &300, &token_address, &memo);
 
-    // Engine-driven transfers pay out to the owner, not to the engine.
+    // Engine-driven transfers pay out to recipient.
     assert_eq!(token_client.balance(&vault.contract_id), 700);
-    assert_eq!(token_client.balance(&vault.owner), 300);
-    assert_eq!(token_client.balance(&vault.engine), 0);
+    assert_eq!(token_client.balance(&recipient), 300);
 }
 
 // --- TTL ---
@@ -339,4 +363,88 @@ fn test_extend_ttl_is_permissionless() {
 
     let ttl = env.as_contract(&vault.contract_id, || env.storage().instance().get_ttl());
     assert!(ttl >= THIRTY_DAYS_IN_LEDGERS);
+}
+
+// --- Events ---
+
+#[test]
+fn test_initialize_emits_event() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, AutopilotVault);
+    let client = AutopilotVaultClient::new(&env, &contract_id);
+
+    let owner = Address::generate(&env);
+    let engine = Address::generate(&env);
+
+    client.initialize(&owner, &engine);
+
+    assert_eq!(
+        env.events().all().filter_by_contract(&contract_id),
+        soroban_sdk::vec![
+            &env,
+            (
+                contract_id.clone(),
+                (symbol_short!("init"),).into_val(&env),
+                (owner.clone(), engine.clone()).into_val(&env),
+            ),
+        ]
+    );
+}
+
+#[test]
+fn test_withdraw_emits_event() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let vault = setup_vault(&env);
+    let token_address = fund_vault(&env, &vault.contract_id, 1000);
+    let client = AutopilotVaultClient::new(&env, &vault.contract_id);
+
+    client.withdraw(&400, &token_address);
+
+    assert_eq!(
+        env.events().all().filter_by_contract(&vault.contract_id),
+        soroban_sdk::vec![
+            &env,
+            (
+                vault.contract_id.clone(),
+                (symbol_short!("withdraw"),).into_val(&env),
+                (vault.owner.clone(), 400i128, token_address.clone()).into_val(&env),
+            ),
+        ]
+    );
+}
+
+#[test]
+fn test_engine_execute_emits_event() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let vault = setup_vault(&env);
+    let token_address = fund_vault(&env, &vault.contract_id, 1000);
+    let client = AutopilotVaultClient::new(&env, &vault.contract_id);
+    let recipient = Address::generate(&env);
+    let memo = soroban_sdk::String::from_str(&env, "rule-trigger-1");
+
+    client.engine_execute(&recipient, &300, &token_address, &memo);
+
+    assert_eq!(
+        env.events().all().filter_by_contract(&vault.contract_id),
+        soroban_sdk::vec![
+            &env,
+            (
+                vault.contract_id.clone(),
+                (symbol_short!("execute"),).into_val(&env),
+                (
+                    recipient.clone(),
+                    300i128,
+                    token_address.clone(),
+                    memo.clone()
+                )
+                    .into_val(&env),
+            ),
+        ]
+    );
 }

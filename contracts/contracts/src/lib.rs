@@ -133,7 +133,11 @@ impl AutopilotVault {
         let engine: Address = env.storage().instance().get(&DataKey::Engine).unwrap();
         engine.require_auth();
 
-        if let Some(limit) = env.storage().instance().get::<_, i128>(&DataKey::SpendLimit) {
+        if let Some(limit) = env
+            .storage()
+            .instance()
+            .get::<_, i128>(&DataKey::SpendLimit)
+        {
             if amount > limit {
                 panic!("Amount exceeds spend limit");
             }

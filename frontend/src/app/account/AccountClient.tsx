@@ -432,6 +432,8 @@ function TxHistory({ transactions }: { transactions: Tx[] }) {
 
 // ── Upgrade Modal ─────────────────────────────────────────────────────────────
 function UpgradeModal({ onClose }: { onClose: () => void }) {
+  const [showComingSoon, setShowComingSoon] = useState(false);
+
   return (
     <AnimatePresence>
       <motion.div
@@ -486,14 +488,29 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
 
             <button
               className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-black font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-              onClick={() => alert("Payment integration coming soon! This is a testnet demo.")}
+              onClick={() => setShowComingSoon(true)}
+              aria-describedby={showComingSoon ? "upgrade-coming-soon" : undefined}
             >
               <Crown className="w-4 h-4" />
               Upgrade Now — $4.99/mo
             </button>
-            <p className="text-[11px] text-white/20 text-center mt-3">
-              Testnet demo · Payment integration coming soon
-            </p>
+            {showComingSoon ? (
+              <div
+                id="upgrade-coming-soon"
+                role="status"
+                aria-live="polite"
+                className="mt-3 flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2.5"
+              >
+                <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" aria-hidden="true" />
+                <p className="text-xs leading-5 text-amber-200/80">
+                  Payments are coming soon. This testnet demo will not charge you.
+                </p>
+              </div>
+            ) : (
+              <p className="text-[11px] text-white/20 text-center mt-3">
+                Testnet demo · Payment integration coming soon
+              </p>
+            )}
           </div>
         </motion.div>
       </motion.div>

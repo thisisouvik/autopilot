@@ -105,7 +105,8 @@ export default async function autopilotRoutes(server: FastifyInstance) {
         const payments = await fetchRecentPayments(user.publicKey, 10);
 
         for (const payment of payments) {
-          const paymentAmountXLM = parseFloat(payment.amount);
+          const paymentAmount = parseFloat(payment.amount);
+          const assetCode = (payment.asset || "XLM").trim().toUpperCase().split(":", 1)[0];
           let paymentClaimed = false;
 
           for (const rule of rules) {
@@ -143,7 +144,7 @@ export default async function autopilotRoutes(server: FastifyInstance) {
 
               await sql`
                 INSERT INTO "AutomatedTransaction" (
-                  id, "userId", "ruleId", amount, type, memo, "txHash", "createdAt"
+                  id, "userId", "ruleId", amount, type, asset, memo, "txHash", "createdAt"
                 )
                 VALUES (
                   gen_random_uuid(),
@@ -151,8 +152,9 @@ export default async function autopilotRoutes(server: FastifyInstance) {
                   ${rule.id}::uuid,
                   ${execAmount},
                   ${rule.action.toLowerCase()},
+                  ${assetCode},
                   ${memo},
-                  ${payment.id},
+                  ${txHash},
                   NOW()
                 )
               `;

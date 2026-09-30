@@ -38,9 +38,17 @@ export default async function goalsRoutes(server: FastifyInstance) {
     const body = request.body as any;
     const sql = getDb();
 
-    if (!body.name || !body.targetAmount) {
-      return reply.status(400).send({ error: "Name and target amount are required" });
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    const targetAmount = parseFloat(body.targetAmount);
+
+    if (!name || isNaN(targetAmount) || targetAmount <= 0) {
+      return reply.status(400).send({ error: "Name and a positive target amount are required." });
     }
+
+    if (name.length > 60) {
+      return reply.status(400).send({ error: "Goal name must be 60 characters or fewer." });
+    }
+
 
     const maxGoals = readConfiguredLimit("MAX_GOALS_PER_USER", DEFAULT_MAX_GOALS_PER_USER);
     const countRows = await sql`

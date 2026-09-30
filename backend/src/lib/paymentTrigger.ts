@@ -1,7 +1,8 @@
 const SUPPORTED_ASSETS = new Set(["XLM", "USDC"]);
 
-export function doesPaymentMatchTrigger(trigger: string, asset: string): boolean {
-  const normalizedTrigger = trigger.toLowerCase();
+export function doesPaymentMatchTrigger(trigger: string | null | undefined, asset: string | null | undefined): boolean {
+  if (!trigger || !asset) return false;
+  const normalizedTrigger = trigger.toLowerCase().trim();
   const assetCode = asset.trim().toUpperCase().split(":", 1)[0];
 
   if (!SUPPORTED_ASSETS.has(assetCode)) return false;
@@ -13,8 +14,13 @@ export function doesPaymentMatchTrigger(trigger: string, asset: string): boolean
     normalizedTrigger.includes("received") ||
     normalizedTrigger.includes("incoming") ||
     normalizedTrigger.includes("deposit") ||
+    normalizedTrigger.includes("deposited") ||
     normalizedTrigger.includes("salary") ||
+    normalizedTrigger.includes("paycheck") ||
+    normalizedTrigger.includes("payroll") ||
     normalizedTrigger.includes("income") ||
+    normalizedTrigger.includes("inflow") ||
+    normalizedTrigger.includes("credited") ||
     normalizedTrigger.includes("transfer");
 
   if (!isPaymentTrigger) return false;
@@ -24,4 +30,4 @@ export function doesPaymentMatchTrigger(trigger: string, asset: string): boolean
   );
 
   return requestedAssets.length === 0 || requestedAssets.includes(assetCode.toLowerCase());
-}
+}

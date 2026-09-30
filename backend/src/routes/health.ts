@@ -143,13 +143,20 @@ export default async function healthRoutes(server: FastifyInstance) {
     reply.header("Cache-Control", "no-store");
     return reply.status(statusCode).send({
       status: criticalDependencyDown ? "degraded" : "ok",
+      uptime: Math.floor(process.uptime()),
+      environment: process.env.NODE_ENV || "development",
       db: db.status,
       horizon: horizon.status,
       redis: redis.status,
       engine: engine.status,
       engine_balance: engine.balanceXlm === null ? "N/A" : `${engine.balanceXlm.toFixed(2)} XLM`,
       checks: { db, horizon, redis, engine },
+      memory: {
+        rssMb: Math.round(process.memoryUsage().rss / 1024 / 1024),
+        heapUsedMb: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+      },
       timestamp: new Date().toISOString(),
     });
   });
 }
+

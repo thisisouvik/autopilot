@@ -62,22 +62,44 @@ export async function getHorizonCursor(publicKey: string): Promise<string | null
 }
 
 /**
+ * Check if Redis is actively configured
+ */
+export function isRedisAvailable(): boolean {
+  return getRedis() !== null;
+}
+
+/**
  * Cache any value with a TTL (useful for balance caching, etc.)
  */
 export async function cacheSet(key: string, value: unknown, ttlSecs = 30): Promise<void> {
-  const redis = getRedis();
-  if (!redis) return;
-  await redis.set(key, JSON.stringify(value), { ex: ttlSecs });
+  try {
+    const redis = getRedis();
+    if (!redis) return;
+    await redis.set(key, JSON.stringify(value), { ex: ttlSecs });
+  } catch (err) {
+    console.warn(`[Redis] Failed to cacheSet for key ${key}:`, err);
+  }
 }
 
 export async function cacheGet<T>(key: string): Promise<T | null> {
-  const redis = getRedis();
-  if (!redis) return null;
-  const val = await redis.get<string>(key);
-  if (!val) return null;
   try {
-    return JSON.parse(val) as T;
+    const redis = getRedis();
+    if (!redis) return null;
+    const val = await redis.get<string>(key);
+    if (!val) return null;
+    return typeof val === "string" ? (JSON.parse(val) as T) : (val as T);
   } catch {
     return null;
   }
 }
+
+export async function cacheDel(key: string): Promise<void> {
+  try {
+    const redis = getRedis();
+    if (!redis) return;
+    await redis.del(key);
+  } catch (err) {
+    console.warn(`[Redis] Failed to cacheDel for key ${key}:`, err);
+  }
+}
+

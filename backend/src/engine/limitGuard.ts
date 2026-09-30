@@ -41,6 +41,10 @@ export async function checkSpendingLimit(
   dailyLimitXLM: number | null,
   weeklyLimitXLM: number | null
 ): Promise<{ allowed: boolean; reason?: string }> {
+  if (!userId || isNaN(amountXLM) || amountXLM <= 0) {
+    return { allowed: true };
+  }
+
   const redis = getRedis();
 
   // No Redis configured — skip limit check (degrade gracefully)
@@ -49,6 +53,7 @@ export async function checkSpendingLimit(
   }
 
   const microAmount = Math.round(amountXLM * MICRO);
+
 
   if (dailyLimitXLM !== null) {
     const dailyMicroLimit = Math.round(dailyLimitXLM * MICRO);

@@ -24,6 +24,17 @@ import { useRouter } from "next/navigation";
 import { horizonAccountUrl, IS_TESTNET, NETWORK_LABEL } from "@/lib/network";
 
 // ── Metric Tile ─────────────────────────────────────────────────────────────
+// Static lookup map — full class strings must be present as unbroken literals
+// so Tailwind's JIT scanner includes them in the production bundle.
+const ACCENT_CLASSES = {
+  green:  { bg: "bg-green-500/10  border-green-500/20",  text: "text-green-500"  },
+  blue:   { bg: "bg-blue-500/10   border-blue-500/20",   text: "text-blue-500"   },
+  purple: { bg: "bg-purple-500/10 border-purple-500/20", text: "text-purple-500" },
+  amber:  { bg: "bg-amber-500/10  border-amber-500/20",  text: "text-amber-500"  },
+} as const;
+
+type AccentKey = keyof typeof ACCENT_CLASSES;
+
 function MetricTile({
   label,
   value,
@@ -35,14 +46,15 @@ function MetricTile({
   value: string;
   sub?: string;
   icon: React.ElementType;
-  accent: string;
+  accent: AccentKey;
 }) {
+  const { bg, text } = ACCENT_CLASSES[accent];
   return (
     <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-5">
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs text-white/30 font-medium">{label}</p>
-        <div className={`w-7 h-7 rounded-lg ${accent}/10 border ${accent}/20 flex items-center justify-center`}>
-          <Icon className={`w-3.5 h-3.5 ${accent.replace("bg-", "text-")}`} />
+        <div className={`w-7 h-7 rounded-lg border flex items-center justify-center ${bg}`}>
+          <Icon className={`w-3.5 h-3.5 ${text}`} />
         </div>
       </div>
       <p className="text-xl font-bold text-white [overflow-wrap:anywhere]">{value}</p>
@@ -397,17 +409,17 @@ export default function DashboardPage() {
             value={`${savedThisMonth.toFixed(2)} XLM`}
             sub={savedThisMonthUsdc > 0 ? `+ ${savedThisMonthUsdc.toFixed(2)} USDC` : "via active rules"}
             icon={Shield}
-            accent="bg-green-500"
+            accent="green"
           />
-          <MetricTile label="Active rules" value={String(activeRules)} sub={activeRules === 0 ? "Create your first" : "automations running"} icon={Zap} accent="bg-blue-500" />
+          <MetricTile label="Active rules" value={String(activeRules)} sub={activeRules === 0 ? "Create your first" : "automations running"} icon={Zap} accent="blue" />
           <MetricTile
             label="Invested"
             value={`${totalInvested.toFixed(2)} XLM`}
             sub={totalInvestedUsdc > 0 ? `+ ${totalInvestedUsdc.toFixed(2)} USDC` : "total automated"}
             icon={TrendingUp}
-            accent="bg-purple-500"
+            accent="purple"
           />
-          <MetricTile label="Savings rate" value={`${savingsRate}%`} sub="of XLM balance saved" icon={Activity} accent="bg-amber-500" />
+          <MetricTile label="Savings rate" value={`${savingsRate}%`} sub="of XLM balance saved" icon={Activity} accent="amber" />
         </div>
 
         {/* Activity Feed */}

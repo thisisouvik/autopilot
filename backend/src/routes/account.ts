@@ -60,11 +60,29 @@ export default async function accountRoutes(server: FastifyInstance) {
     const body = request.body as any;
     const sql = getDb();
 
+    let dailyLimit = body.dailyLimit;
+    if (dailyLimit !== undefined && dailyLimit !== null) {
+      const parsed = parseFloat(dailyLimit);
+      if (isNaN(parsed) || parsed < 0) {
+        return reply.status(400).send({ error: "dailyLimit must be a positive number or null" });
+      }
+      dailyLimit = parsed.toString();
+    }
+
+    let weeklyLimit = body.weeklyLimit;
+    if (weeklyLimit !== undefined && weeklyLimit !== null) {
+      const parsed = parseFloat(weeklyLimit);
+      if (isNaN(parsed) || parsed < 0) {
+        return reply.status(400).send({ error: "weeklyLimit must be a positive number or null" });
+      }
+      weeklyLimit = parsed.toString();
+    }
+
     await sql`
       UPDATE "User"
       SET
-        "dailyLimit"  = CASE WHEN ${body.dailyLimit  !== undefined} THEN ${body.dailyLimit  ?? null} ELSE "dailyLimit"  END,
-        "weeklyLimit" = CASE WHEN ${body.weeklyLimit !== undefined} THEN ${body.weeklyLimit ?? null} ELSE "weeklyLimit" END,
+        "dailyLimit"  = CASE WHEN ${body.dailyLimit  !== undefined} THEN ${dailyLimit} ELSE "dailyLimit"  END,
+        "weeklyLimit" = CASE WHEN ${body.weeklyLimit !== undefined} THEN ${weeklyLimit} ELSE "weeklyLimit" END,
         "plan"        = CASE WHEN ${body.plan        !== undefined} THEN ${body.plan        ?? 'free'} ELSE "plan"    END,
         "updatedAt"   = NOW()
       WHERE id = ${request.user!.id}::uuid
@@ -73,3 +91,4 @@ export default async function accountRoutes(server: FastifyInstance) {
     return reply.send({ success: true });
   });
 }
+

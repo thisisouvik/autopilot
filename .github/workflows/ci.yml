@@ -65,6 +65,9 @@ jobs:
         # so this step reports issues without blocking PRs on legacy code.
         run: npm run lint
 
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
       - name: Type check
         run: npx tsc --noEmit
 

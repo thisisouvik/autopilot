@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["es2015", "es2025"],
+    "lib": ["es2016.array.include", "es2022", "es2022.error", "es2022.object", "es2022.string", "es2022.regexp", "es2023.array"],
     "target": "es2022",
     "module": "ESNext",
     "moduleResolution": "bundler",

@@ -17,7 +17,7 @@
 import cron, { ScheduledTask } from "node-cron";
 import { getDb } from "../lib/db";
 import { getCronQueue, CronJobData } from "./queue";
-import { ruleAsset } from "./processor";
+import { normalizeRuleAsset } from "../lib/ruleAsset";
 import { readConfiguredLimit } from "../lib/pagination";
 
 const DEFAULT_MAX_RULES_PER_USER = 20;
@@ -91,7 +91,7 @@ function registerCronRule(rule: {
       isPercentage: rule.isPercentage,
       action: rule.action,
       memo: rule.memo,
-      asset: ruleAsset(rule),
+      asset: normalizeRuleAsset(rule).asset,
     };
 
     await getCronQueue().add(`cron:${rule.id}:${Date.now()}`, jobData);

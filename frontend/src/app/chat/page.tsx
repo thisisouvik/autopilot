@@ -54,7 +54,8 @@ export default async function ChatPage() {
       type: t.type ?? "Other",
       ruleId: t.ruleId ?? t.rule_id ?? null,
       // Serialise to ISO so the value survives the server→client boundary.
-      createdAt: new Date(t.createdAt ?? t.created_at ?? Date.now()).toISOString(),
+      // Fallback to epoch 0 rather than Date.now() to keep this pure.
+      createdAt: new Date(t.createdAt ?? t.created_at ?? 0).toISOString(),
     }));
 
   return (

@@ -25,6 +25,15 @@ updates:
     commit-message:
       prefix: "chore(frontend-deps)"
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "@prisma/client"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "prisma"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@prisma/engines"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@prisma/adapter-neon"
+        update-types: ["version-update:semver-major"]
 
   # Soroban contract Cargo dependencies
   - package-ecosystem: "cargo"

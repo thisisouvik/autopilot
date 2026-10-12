@@ -39,7 +39,7 @@
     "@fastify/jwt": "^10.1.0",
     "@fastify/rate-limit": "^11.0.0",
     "@neondatabase/serverless": "^1.1.0",
-    "@stellar/stellar-sdk": "^16.0.1",
+    "@stellar/stellar-sdk": "^17.2.1",
     "@upstash/redis": "^1.38.0",
     "bullmq": "^5.79.1",
     "dotenv": "^17.4.2",

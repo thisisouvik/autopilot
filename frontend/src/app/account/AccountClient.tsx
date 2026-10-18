@@ -1,16 +1,14 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { explorerUrl } from "@/lib/network";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Copy, Check, ExternalLink, Zap, Shield, Crown,
   AlertTriangle, LogOut, Loader2, ChevronRight,
-  DollarSign, Calendar, TrendingUp, Clock, X,
-  CheckCircle2, ArrowUpRight, ArrowDownLeft,
+  Calendar, TrendingUp, Clock, X,
+  CheckCircle2, ArrowDownLeft,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -612,15 +610,27 @@ export default function AccountClient({ publicKey }: { publicKey: string }) {
   const [loading, setLoading] = useState(true);
   const [showUpgrade, setShowUpgrade] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    try {
-      const res = await fetch("/api/account");
-      if (res.ok) setData(await res.json());
-    } catch {}
-    setLoading(false);
+  useEffect(() => {
+    let isMounted = true;
+    async function loadAccount() {
+      try {
+        const res = await fetch("/api/account");
+        if (res.ok && isMounted) {
+          setData(await res.json());
+        }
+      } catch {
+        // network or server error handled gracefully
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+    loadAccount();
+    return () => {
+      isMounted = false;
+    };
   }, []);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
 
   const updateLimit = (key: "dailyLimit" | "weeklyLimit", val: number | null) => {
     setData(prev => prev ? { ...prev, [key]: val } : prev);

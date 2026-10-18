@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * BullMQ Payment Event Processor
  *
@@ -19,16 +18,53 @@ import { Worker, Job } from "bullmq";
 import { getDb } from "../lib/db";
 import { claimPayment, executeRuleTransaction } from "../lib/engine";
 import { doesPaymentMatchTrigger } from "../lib/paymentTrigger";
+import { readConfiguredLimit } from "../lib/pagination";
 import { checkSpendingLimit, recordSpend, rollbackSpend } from "./limitGuard";
 import { PAYMENT_QUEUE_NAME, PaymentJobData, CronJobData, CRON_QUEUE_NAME, getConnectionOptions } from "./queue";
 
-type SupportedAsset = "XLM" | "USDC";
+export type SupportedAsset = "XLM" | "USDC";
+
+export const DEFAULT_MAX_RULES_PER_USER = 20;
+
+/**
+ * Parse an asset identifier string (e.g. "XLM", "USDC:G...") into supported asset code.
+ */
+export function parseAssetCode(asset: string): SupportedAsset | null {
+  const code = asset === "XLM" ? "XLM" : asset.split(":")[0]?.toUpperCase();
+  return code === "XLM" || code === "USDC" ? code : null;
+}
+
+export interface RuleExecutionResult {
+  ruleId: string;
+  status: "executed" | "failed" | "blocked" | "skipped";
+  txHash?: string;
+  amount?: string;
+  asset?: SupportedAsset;
+  destination?: string;
+  reason?: string;
+  error?: string;
+}
+
+export interface ProcessPaymentResult {
+  skipped?: boolean;
+  reason?: string;
+  processed?: number;
+  results?: RuleExecutionResult[];
+}
+
+export interface ProcessCronResult {
+  status: "executed" | "blocked" | "skipped";
+  txHash?: string;
+  amount?: string;
+  reason?: string;
+  skipped?: boolean;
+}
 
 /**
  * Core payment processing logic — exported for direct use.
  * Called by both the BullMQ worker AND directly from the Horizon stream.
  */
-export async function processPaymentDirect(data: PaymentJobData): Promise<any> {
+export async function processPaymentDirect(data: PaymentJobData): Promise<ProcessPaymentResult> {
   const { userId, publicKey, paymentHorizonId, amount, asset } = data;
   const sql = getDb();
   const maxRules = readConfiguredLimit("MAX_RULES_PER_USER", DEFAULT_MAX_RULES_PER_USER);
@@ -69,7 +105,7 @@ export async function processPaymentDirect(data: PaymentJobData): Promise<any> {
   const savingsVault = vaults.find((v: any) => v.type === "savings");
   const investVault  = vaults.find((v: any) => v.type === "investment");
 
-  const results: any[] = [];
+  const results: RuleExecutionResult[] = [];
   let paymentClaimed = false;
 
   // ── Step 4: Match + execute each rule
@@ -207,11 +243,11 @@ export async function processPaymentDirect(data: PaymentJobData): Promise<any> {
 
 // ── BullMQ worker wrapper ─────────────────────────────────────────────────
 
-async function processPaymentJob(job: Job<PaymentJobData>) {
+async function processPaymentJob(job: Job<PaymentJobData>): Promise<ProcessPaymentResult> {
   return processPaymentDirect(job.data);
 }
 
-export async function processCronJob(job: Job<CronJobData>) {
+async function processCronJob(job: Job<CronJobData>): Promise<ProcessCronResult> {
   const { userId, ruleId, amount, isPercentage, action, memo } = job.data;
   const sql = getDb();
 

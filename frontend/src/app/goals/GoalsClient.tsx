@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 "use client";
 
 import { useState } from "react";
@@ -34,29 +32,16 @@ interface Rule {
   status: string;
 }
 
-/**
- * Infer a rule's asset from its text — mirrors ruleAsset() in the backend
- * (backend/src/engine/processor.ts). The Rule table stores the asset inside the
- * trigger phrase rather than a column, so both sides read it the same way.
- */
-function ruleAssetOf(rule: Rule): "XLM" | "USDC" {
-  const text = [rule.trigger, rule.action, rule.memo, rule.description]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-  return text.includes("usdc") && !text.includes("xlm") ? "USDC" : "XLM";
-}
-
 // ── AI ETA calc ───────────────────────────────────────────────────────────────
-function calcETA(goal: Goal, rules: Rule[]): string {
+function calcETA(goal: Goal, rules: Rule[], txs: TxRow[] = []): EtaResult {
   const remaining = (goal.targetAmount ?? 0) - (goal.currentAmount ?? 0);
   const linked = rules.find(r => r.id === goal.linkedRuleId) ?? null;
 
   return calcGoalEta({
     remaining,
     rule: linked ? { id: linked.id, amount: linked.amount, isPercentage: linked.isPercentage } : null,
-    ruleTxs: linked ? transactions.filter(t => t.ruleId === linked.id) : [],
-    allTxs: transactions,
+    ruleTxs: linked ? txs.filter(t => t.ruleId === linked.id) : [],
+    allTxs: txs,
   });
 }
 
@@ -104,7 +89,7 @@ function GoalCard({
   const pct = Math.min(Math.round((cur / tgt) * 100), 100);
   // Goals created before asset tracking are XLM.
   const goalAsset = goal.asset ?? "XLM";
-  const eta = calcETA(goal, rules);
+  const eta = calcETA(goal, rules, transactions);
   const linked = rules.find(r => r.id === goal.linkedRuleId);
   const isDone = pct >= 100;
 
@@ -194,7 +179,7 @@ function GoalCard({
         </div>
         {eta.basis === "history" && eta.weeklyRate !== null && (
           <p className="text-[11px] text-white/25 mt-1.5">
-            Averaging {fmtXlm(eta.weeklyRate)} XLM/week from this rule's actual activity
+            Averaging {fmtXlm(eta.weeklyRate)} XLM/week from this rule&apos;s actual activity
           </p>
         )}
 

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
@@ -531,7 +529,7 @@ function CoachView({
           {stats.txCountAllTime > 0
             ? ` and ${stats.txCountAllTime} automated transfer${stats.txCountAllTime !== 1 ? "s" : ""}`
             : ""}
-          . Here's what it found:
+          . Here&apos;s what it found:
         </p>
       </motion.div>
       <div className="space-y-4">
@@ -725,7 +723,7 @@ export default function ChatClient({
                 </div>
                 <h2 className="text-lg font-semibold text-white mb-2">What should AutoPilot do?</h2>
                 <p className="text-sm text-white/35 max-w-xs mb-8">
-                  Describe your financial goal in plain English. I'll turn it into an automation rule.
+                  Describe your financial goal in plain English. I&apos;ll turn it into an automation rule.
                 </p>
                 <div className="flex flex-col gap-2 w-full max-w-sm">
                   {SUGGESTIONS.map(s => (

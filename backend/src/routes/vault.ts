@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * routes/vault.ts
  *
@@ -11,16 +10,12 @@
  * DELETE /api/vault/:type     → close vault (merge XLM back to wallet)
  */
 
-import { FastifyInstance } from "fastify";
+import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { verifyAuth } from "../middleware/auth";
 import { getDb } from "../lib/db";
 import {
   createVaultOnChain,
   getVaultBalance,
-  depositXLMToVault,
-  depositUSDCToVault,
-  withdrawXLMFromVault,
-  withdrawUSDCFromVault,
   prepareWithdrawTransaction,
   submitSignedWithdrawTransaction,
   closeVault,
@@ -29,6 +24,19 @@ import {
 import { explorerUrl, NETWORK_LABEL } from "../config/network";
 import { buildPage, parsePagination } from "../lib/pagination";
 
+export interface AuthUser {
+  id: string;
+  publicKey: string;
+}
+
+export type AuthRequest<
+  RouteGeneric extends {
+    Params?: any;
+    Querystring?: any;
+    Body?: any;
+  } = {}
+> = FastifyRequest<RouteGeneric> & { user: AuthUser };
+
 const VALID_TYPES: VaultType[] = ["savings", "investment"];
 
 export default async function vaultRoutes(server: FastifyInstance) {
@@ -36,7 +44,7 @@ export default async function vaultRoutes(server: FastifyInstance) {
 
   // ── List all vaults ───────────────────────────────────────────────────
 
-  server.get("/", async (request: any, reply: any) => {
+  server.get("/", async (request: AuthRequest<{ Querystring: Record<string, string | undefined> }>, reply: FastifyReply) => {
     const sql = getDb();
     const pagination = parsePagination(request.query as any, { defaultLimit: 20, maxLimit: 50 });
     if (!pagination.ok) return reply.status(400).send({ error: pagination.error });
@@ -64,7 +72,7 @@ export default async function vaultRoutes(server: FastifyInstance) {
 
   // ── Create a vault ────────────────────────────────────────────────────
 
-  server.post("/:type", async (request: any, reply: any) => {
+  server.post("/:type", async (request: AuthRequest<{ Params: { type: string } }>, reply: FastifyReply) => {
     const { type } = request.params as { type: string };
 
     if (!VALID_TYPES.includes(type as VaultType)) {
@@ -134,7 +142,7 @@ export default async function vaultRoutes(server: FastifyInstance) {
 
   // ── Get live balance ──────────────────────────────────────────────────
 
-  server.get("/:type/balance", async (request: any, reply: any) => {
+  server.get("/:type/balance", async (request: AuthRequest<{ Params: { type: string } }>, reply: FastifyReply) => {
     const { type } = request.params as { type: string };
     const sql = getDb();
 
@@ -177,7 +185,7 @@ export default async function vaultRoutes(server: FastifyInstance) {
 
   // ── Prepare withdrawal (Soroban non-custodial wallet sign flow) ───────
 
-  server.post("/:type/withdraw/prepare", async (request: any, reply: any) => {
+  server.post("/:type/withdraw/prepare", async (request: AuthRequest<{ Params: { type: string }; Body: { asset?: "xlm" | "usdc"; amount: string } }>, reply: FastifyReply) => {
     const { type } = request.params as { type: string };
     const { asset = "xlm", amount } = request.body as {
       asset?: "xlm" | "usdc";
@@ -235,7 +243,7 @@ export default async function vaultRoutes(server: FastifyInstance) {
 
   // ── Execute/Submit withdrawal (Requires Web3 wallet cryptographic signature) ──
 
-  server.post("/:type/withdraw", async (request: any, reply: any) => {
+  server.post("/:type/withdraw", async (request: AuthRequest<{ Params: { type: string }; Body?: { signedTxXdr?: string } }>, reply: FastifyReply) => {
     const { type } = request.params as { type: string };
     const { signedTxXdr } = (request.body ?? {}) as {
       signedTxXdr?: string;
@@ -277,7 +285,7 @@ export default async function vaultRoutes(server: FastifyInstance) {
 
   // ── Close vault ───────────────────────────────────────────────────────
 
-  server.delete("/:type", async (request: any, reply: any) => {
+  server.delete("/:type", async (request: AuthRequest<{ Params: { type: string } }>, reply: FastifyReply) => {
     const { type } = request.params as { type: string };
 
     if (!VALID_TYPES.includes(type as VaultType)) {

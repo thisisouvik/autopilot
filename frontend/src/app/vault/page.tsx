@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -98,15 +94,19 @@ function WithdrawModal({
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (userPublicKey) {
-      setDestKey(userPublicKey);
-    } else {
+    if (!userPublicKey) {
+      let isMounted = true;
       fetch("/api/auth/me", { credentials: "include" })
         .then((r) => r.json())
         .then((d) => {
-          if (d.user?.publicKey) setDestKey(d.user.publicKey);
+          if (isMounted && d.user?.publicKey) setDestKey(d.user.publicKey);
         })
         .catch(() => {});
+      return () => {
+        isMounted = false;
+      };
+    } else {
+      setDestKey((prev) => (prev === userPublicKey ? prev : userPublicKey));
     }
   }, [userPublicKey]);
 
@@ -661,14 +661,30 @@ export default function VaultPage() {
         const data = await res.json();
         setVaults(Array.isArray(data) ? data : (data.vaults ?? []));
       }
-    } catch {}
-    setLoading(false);
+    } catch {} finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    fetchUser();
-    fetchVaults();
-  }, [fetchVaults]);
+    let isMounted = true;
+    async function init() {
+      await fetchUser();
+      try {
+        const res = await fetch("/api/vault", { credentials: "include" });
+        if (res.ok && isMounted) {
+          const data = await res.json();
+          setVaults(Array.isArray(data) ? data : (data.vaults ?? []));
+        }
+      } catch {} finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    init();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const savingsVault = vaults.find((v) => v.type === "savings");
   const investVault = vaults.find((v) => v.type === "investment");

@@ -26,7 +26,9 @@ impl VaultFactory {
             panic!("Factory already initialized");
         }
         env.storage().instance().set(&FactoryDataKey::Admin, &admin);
-        env.storage().instance().set(&FactoryDataKey::Engine, &engine);
+        env.storage()
+            .instance()
+            .set(&FactoryDataKey::Engine, &engine);
         env.storage()
             .instance()
             .set(&FactoryDataKey::VaultWasmHash, &vault_wasm_hash);
@@ -179,4 +181,3 @@ impl VaultFactory {
             .extend_ttl(crate::INSTANCE_TTL_LEDGERS, crate::INSTANCE_TTL_LEDGERS);
     }
 }
-

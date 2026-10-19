@@ -177,7 +177,7 @@ function WithdrawModal({
       // 3. Prompt user for cryptographic authorization in Freighter
       const signRes = await signTransaction(prepData.unsignedTxXdr, {
         networkPassphrase: prepData.networkPassphrase,
-        accountToSign: destKey || userPublicKey,
+        address: destKey || userPublicKey,
       });
 
       const signedTxXdr = typeof signRes === "string" ? signRes : signRes?.signedTxXdr;

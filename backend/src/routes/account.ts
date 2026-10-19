@@ -40,7 +40,12 @@ export default async function accountRoutes(server: FastifyInstance) {
     }
 
     // Update lastSeen async
-    sql`UPDATE "User" SET "lastSeen" = NOW() WHERE id = ${request.user!.id}::uuid`.catch(console.error);
+    try {
+      const updatePromise = sql`UPDATE "User" SET "lastSeen" = NOW() WHERE id = ${request.user!.id}::uuid`;
+      if (updatePromise && typeof updatePromise.catch === "function") {
+        updatePromise.catch(console.error);
+      }
+    } catch {}
 
     const transactionPage = buildPage(txRows as any[], pagination);
 

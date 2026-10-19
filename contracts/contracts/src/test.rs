@@ -558,7 +558,6 @@ fn test_factory_deploy_vault_and_registry() {
     assert_eq!(user_vaults.get(1).unwrap(), invest_vault);
 }
 
-
 #[test]
 #[should_panic(expected = "Vault already exists for this owner and type")]
 fn test_factory_duplicate_vault_type_panics() {
@@ -603,5 +602,3 @@ fn test_factory_deploy_without_auth_panics() {
     env.set_auths(&[]);
     factory_client.deploy_vault(&owner, &savings_symbol);
 }
-
-

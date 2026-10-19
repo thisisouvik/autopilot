@@ -39,8 +39,8 @@ export interface RuleExecutionResult {
   status: "executed" | "failed" | "blocked" | "skipped";
   txHash?: string;
   amount?: string;
-  asset?: SupportedAsset;
-  destination?: string;
+  asset?: SupportedAsset | null;
+  destination?: string | null;
   reason?: string;
   error?: string;
 }
@@ -53,11 +53,13 @@ export interface ProcessPaymentResult {
 }
 
 export interface ProcessCronResult {
-  status: "executed" | "blocked" | "skipped";
+  status: "executed" | "blocked" | "skipped" | "failed";
   txHash?: string;
   amount?: string;
   reason?: string;
   skipped?: boolean;
+  destination?: string | null;
+  error?: string;
 }
 
 /**
@@ -247,14 +249,14 @@ async function processPaymentJob(job: Job<PaymentJobData>): Promise<ProcessPayme
   return processPaymentDirect(job.data);
 }
 
-async function processCronJob(job: Job<CronJobData>): Promise<ProcessCronResult> {
+export async function processCronJob(job: Job<CronJobData>): Promise<ProcessCronResult> {
   const { userId, ruleId, amount, isPercentage, action, memo } = job.data;
   const sql = getDb();
 
   console.log(`[Processor] ⏰ Cron job for rule ${ruleId}`);
 
   const execAmount = amount;
-  if (execAmount <= 0) return { skipped: true, reason: "zero_amount" };
+  if (execAmount <= 0) return { status: "skipped", skipped: true, reason: "zero_amount" };
 
   const [userRows, vaults] = await Promise.all([
     sql`
@@ -265,7 +267,7 @@ async function processCronJob(job: Job<CronJobData>): Promise<ProcessCronResult>
       WHERE "userId" = ${userId}::uuid
     `,
   ]);
-  if (userRows.length === 0) return { skipped: true, reason: "user_not_found" };
+  if (userRows.length === 0) return { status: "skipped", skipped: true, reason: "user_not_found" };
 
   const savingsVault = vaults.find((v: any) => v.type === "savings");
   const investVault  = vaults.find((v: any) => v.type === "investment");

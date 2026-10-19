@@ -48,13 +48,15 @@ export function parseContractEvent(event: any): ParsedSorobanEvent {
 
   let nativeVal: any = null;
   try {
-    if (event.value) {
+    if (Array.isArray(event.value)) {
+      nativeVal = event.value;
+    } else if (event.value) {
       nativeVal = typeof event.value === "string" && !event.value.startsWith("A")
         ? event.value
         : scValToNative(event.value);
     }
   } catch {
-    nativeVal = null;
+    nativeVal = event.value ?? null;
   }
 
   if (topic0.includes("withdraw")) {

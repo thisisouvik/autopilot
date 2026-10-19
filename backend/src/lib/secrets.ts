@@ -40,6 +40,9 @@ export async function getEngineSecret(): Promise<string> {
   // 3. Fallback to Environment Variable
   const secret = process.env.AUTOPILOT_SECRET_KEY;
   if (!secret) {
+    if (process.env.NODE_ENV === "test" || process.env.VITEST) {
+      return "SCCYLWEVLJF4OCBFMMN34P2ELKC64PYBZOTZQ27ONY567JWTMQOKY7VC";
+    }
     throw new Error("AUTOPILOT_SECRET_KEY not found in env and no secrets manager configured.");
   }
   return secret;

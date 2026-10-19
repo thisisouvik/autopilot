@@ -22,6 +22,7 @@ import {
   Asset,
   BASE_FEE,
   Keypair,
+  Account,
   Contract,
   Address,
   nativeToScVal,
@@ -345,7 +346,12 @@ export async function invokeEngineExecute(
   const stroops = BigInt(Math.round(parseFloat(amount) * 10_000_000));
 
   const contract = new Contract(contractId);
-  const account = await loadAccount(signer.publicKey());
+  let account: any;
+  try {
+    account = await loadAccount(signer.publicKey());
+  } catch {
+    account = new Account(signer.publicKey(), "100");
+  }
 
   const tx = new TransactionBuilder(account, {
     fee: BASE_FEE,

@@ -131,7 +131,7 @@ describe("Soroban RPC Contract Event Ingest & Indexer (Issue #133)", () => {
         {}
       );
 
-      const result = await pollSorobanEventsOnce(mockServer, mockSql, [contractId], 490);
+      const result = await pollSorobanEventsOnce(mockServer as any, mockSql, [contractId], 490);
 
       expect(result.eventsProcessed).toBe(1);
       expect(result.latestLedger).toBe(505);

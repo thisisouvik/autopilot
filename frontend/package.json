@@ -19,7 +19,7 @@
     "@stellar/stellar-sdk": "^17.1.0",
     "@types/ws": "^8.18.1",
     "@vercel/analytics": "^2.0.1",
-    "framer-motion": "^12.42.0",
+    "framer-motion": "^14.3.0",
     "geist": "^1.7.2",
     "jose": "^6.2.3",
     "lucide-react": "^1.48.0",

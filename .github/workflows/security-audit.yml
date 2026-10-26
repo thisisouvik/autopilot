@@ -63,5 +63,5 @@ jobs:
       - name: Install cargo-audit
         run: cargo install cargo-audit
       - name: Audit Rust dependencies
-        run: cargo audit
+        run: cargo audit --ignore RUSTSEC-2026-0387
         working-directory: contracts

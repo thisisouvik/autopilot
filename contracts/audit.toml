@@ -1,0 +1,11 @@
+# Configuration for cargo-audit
+# https://docs.rs/cargo-audit/latest/cargo_audit/config/struct.AuditConfig.html
+
+[advisories]
+ignore = [
+    # RUSTSEC-2026-0387: Multiple timing variability issues in crypto-bigint 0.5.5.
+    # Transitive dependency of soroban-env-host via elliptic-curve 0.13.8.
+    # The host environment is only used in contract tests and simulation, not deployed WASM bytecode.
+    # No upstream release of soroban-env-host supports crypto-bigint >= 0.7 yet.
+    "RUSTSEC-2026-0387",
+]

@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "@neondatabase/serverless": "^1.1.0",
+    "@neondatabase/serverless": "^1.2.0",
     "@prisma/adapter-neon": "6.19.3",
     "@prisma/client": "6.19.3",
     "@prisma/engines": "6.19.3",
@@ -24,15 +24,15 @@
     "jose": "^6.2.3",
     "lucide-react": "^1.48.0",
     "motion-dom": "^13.4.4",
-    "motion-utils": "^13.3.0",
+    "motion-utils": "^14.6.0",
     "next": "^16.4.3",
-    "react": "19.3.0",
+    "react": "^19.3.1",
     "react-dom": "19.2.4",
     "ws": "^8.21.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^26",
+    "@types/node": "^26.6.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9.39.5",

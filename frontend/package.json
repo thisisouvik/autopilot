@@ -24,7 +24,7 @@
     "jose": "^6.2.3",
     "lucide-react": "^1.48.0",
     "motion-dom": "^13.4.4",
-    "motion-utils": "^13.3.0",
+    "motion-utils": "^14.6.0",
     "next": "^16.4.3",
     "react": "19.3.0",
     "react-dom": "19.2.4",

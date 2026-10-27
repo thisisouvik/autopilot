@@ -55,6 +55,7 @@
 - [Security](#-security)
 - [License](#-license)
 - [Contributors](#-contributors)
+- [Documentation](#documentation)
 
 ---
 
@@ -90,19 +91,44 @@ A freelancer gets paid sporadically in XLM on Stellar. Instead of manually movin
 
 ## 🏗️ Architecture
 
+### System Overview
+
 ```mermaid
 flowchart LR
-    UI[Next.js Frontend] <-->|REST API / JWT| API[Fastify Backend]
+    UI["Next.js Frontend"] <-->|REST API / JWT| API["Fastify Backend"]
 
-    subgraph AutoPilot Backend
-    API <--> AI[Groq AI Engine]
-    API <--> DB[(PostgreSQL)]
-    DB --> Engine[Rule Engine / Horizon Stream]
+    subgraph Backend ["AutoPilot Backend"]
+        API <--> AI["Groq AI Engine"]
+        API <--> DB[("PostgreSQL")]
+        DB --> Engine["Rule Engine / Horizon Stream"]
     end
 
-    Engine <-->|Stellar SDK| Horizon[Stellar Horizon API]
-    Horizon <--> Blockchain[(Stellar Testnet)]
+    Engine <-->|Stellar SDK| Horizon["Stellar Horizon API"]
+    Horizon <--> Blockchain[("Stellar Testnet")]
 ```
+
+### Dual-Path Streaming Architecture
+
+AutoPilot uses a dual-path streaming architecture to guarantee real-time financial automation without sacrificing reliability.
+
+```mermaid
+flowchart TD
+    User(["User / Freighter Wallet"]) -->|Signs Txs| Frontend["Next.js App"]
+    Frontend -->|REST API| Backend["Fastify Backend"]
+    Backend -->|Postgres| DB[("Neon Postgres")]
+    
+    subgraph Engine ["Engine"]
+        Horizon["Stellar Horizon"] -->|SSE Stream| StreamWorker["HorizonStream"]
+        StreamWorker -->|1. Direct Path| Processor["Rule Processor"]
+        StreamWorker -->|2. Fallback Path| Redis[("Redis / BullMQ")]
+        Redis -->|Queue| Processor
+    end
+    
+    Processor -->|RPC / Submit Tx| Soroban["Soroban AutopilotVault"]
+    Soroban -->|Escrow / Limit check| Stellar["Stellar Network"]
+```
+
+*For a detailed breakdown, please refer to the [Architecture Documentation](docs/ARCHITECTURE.md).*
 
 ### User Flow
 
@@ -433,22 +459,22 @@ Thanks to everyone who has contributed to AutoPilot! 🌟
 
 AutoPilot uses a dual-path streaming architecture to guarantee real-time financial automation without sacrificing reliability.
 
-\\\mermaid
+```mermaid
 flowchart TD
-    User([User / Freighter Wallet]) -->|Signs Txs| Frontend[Next.js App]
-    Frontend -->|REST API| Backend[Express Backend]
-    Backend -->|Postgres| DB[(Neon Postgres)]
+    User(["User / Freighter Wallet"]) -->|Signs Txs| Frontend["Next.js App"]
+    Frontend -->|REST API| Backend["Fastify Backend"]
+    Backend -->|Postgres| DB[("Neon Postgres")]
     
-    subgraph Engine
-    Horizon[Stellar Horizon] -->|SSE Stream| StreamWorker[HorizonStream]
-    StreamWorker -->|1. Direct Path| Processor[Rule Processor]
-    StreamWorker -->|2. Fallback Path| Redis[(Redis / BullMQ)]
-    Redis -->|Queue| Processor
+    subgraph Engine ["Engine"]
+        Horizon["Stellar Horizon"] -->|SSE Stream| StreamWorker["HorizonStream"]
+        StreamWorker -->|1. Direct Path| Processor["Rule Processor"]
+        StreamWorker -->|2. Fallback Path| Redis[("Redis / BullMQ")]
+        Redis -->|Queue| Processor
     end
     
-    Processor -->|RPC / Submit Tx| Soroban[Soroban AutopilotVault]
-    Soroban -->|Escrow/Limit check| Stellar[Stellar Network]
-\\\
+    Processor -->|RPC / Submit Tx| Soroban["Soroban AutopilotVault"]
+    Soroban -->|Escrow / Limit check| Stellar["Stellar Network"]
+```
 
 *For a detailed breakdown, please refer to the [Architecture Documentation](docs/ARCHITECTURE.md).*
 

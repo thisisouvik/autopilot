@@ -6,18 +6,19 @@ AutoPilot uses a dual-path streaming architecture to guarantee real-time financi
 
 ```mermaid
 flowchart TD
-    User([User / Freighter Wallet]) -->|Signs Txs| Frontend[Next.js App]
-    Frontend -->|REST API| Backend[Express Backend]
-    Backend -->|Postgres| DB[(Neon Postgres)]
+    User(["User / Freighter Wallet"]) -->|Signs Txs| Frontend["Next.js App"]
+    Frontend -->|REST API| Backend["Fastify Backend"]
+    Backend -->|Postgres| DB[("Neon Postgres")]
     
-    subgap
-    Horizon[Stellar Horizon] -->|SSE Stream| StreamWorker[HorizonStream]
-    StreamWorker -->|1. Direct Path| Processor[Rule Processor]
-    StreamWorker -->|2. Fallback Path| Redis[(Redis / BullMQ)]
-    Redis -->|Queue| Processor
+    subgraph Engine ["Engine"]
+        Horizon["Stellar Horizon"] -->|SSE Stream| StreamWorker["HorizonStream"]
+        StreamWorker -->|1. Direct Path| Processor["Rule Processor"]
+        StreamWorker -->|2. Fallback Path| Redis[("Redis / BullMQ")]
+        Redis -->|Queue| Processor
+    end
     
-    Processor -->|RPC / Submit Tx| Soroban[Soroban AutopilotVault]
-    Soroban -->|Escrow/Limit check| Stellar[Stellar Network]
+    Processor -->|RPC / Submit Tx| Soroban["Soroban AutopilotVault"]
+    Soroban -->|Escrow / Limit check| Stellar["Stellar Network"]
 ```
 
 ## Processing Paths

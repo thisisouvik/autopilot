@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { isConnected, requestAccess, signMessage } from "@stellar/freighter-api";
+import { isConnected, requestAccess, signMessage } from "@stellar/varial-sdk";
 import { Loader2, Wallet, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { NETWORK_LABEL } from "@/lib/network";
@@ -24,15 +24,15 @@ export default function OnboardingPage() {
     }
   }, [toastMessage]);
 
-  const handleFreighterConnect = async () => {
+  const handleVarialConnect = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // 1. Check if Freighter is installed
+      // 1. Check if Varial wallet is installed
       const connectedRes = await isConnected();
       if (!connectedRes.isConnected) {
-        throw new Error("Freighter is not installed. Please install the extension first.");
+        throw new Error("Varial Wallet is not installed. Please install the Varial extension first.");
       }
 
       // 2. Request access (this will prompt the user if not already allowed)
@@ -40,7 +40,7 @@ export default function OnboardingPage() {
       if (accessRes.error || !accessRes.address) {
         throw new Error(
           accessRes.error?.message ||
-            "Could not retrieve public key. Please approve the connection in Freighter.",
+            "Could not retrieve public key. Please approve the connection in Varial Wallet.",
         );
       }
       const publicKey = accessRes.address;
@@ -56,13 +56,13 @@ export default function OnboardingPage() {
         throw new Error(challenge.error || "Could not start wallet authentication.");
       }
 
-      // 4. Freighter signs the challenge using SEP-53 after explicit approval.
+      // 4. Varial signs the challenge using SEP-53 after explicit approval.
       const signed = await signMessage(challenge.message, { address: publicKey });
       if (signed.error || !signed.signedMessage) {
-        throw new Error(signed.error?.message || "Please approve the sign-in request in Freighter.");
+        throw new Error(signed.error?.message || "Please approve the sign-in request in Varial Wallet.");
       }
       if (signed.signerAddress !== publicKey) {
-        throw new Error("Freighter signed with a different account. Please reconnect the selected wallet.");
+        throw new Error("Varial Wallet signed with a different account. Please reconnect the selected wallet.");
       }
 
       // 5. The backend consumes the challenge and issues a session only after verification.
@@ -144,9 +144,9 @@ export default function OnboardingPage() {
           </motion.div>
         )}
 
-        {/* Freighter Button */}
+        {/* Varial Wallet Button */}
         <button
-          onClick={handleFreighterConnect}
+          onClick={handleVarialConnect}
           disabled={isLoading}
           className="w-full group relative flex items-center justify-between p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
         >
@@ -156,7 +156,7 @@ export default function OnboardingPage() {
                <Wallet className="text-blue-400 w-5 h-5" />
             </div>
             <span className="font-medium text-white/90 group-hover:text-white transition-colors">
-              Connect Freighter
+              Connect Varial Wallet
             </span>
           </div>
           {isLoading ? (

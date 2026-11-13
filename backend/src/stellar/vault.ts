@@ -290,7 +290,7 @@ export async function withdrawUSDCFromVault(
 }
 
 /**
- * Prepare an unsigned Soroban smart contract withdrawal transaction for user's Web3 wallet (Freighter).
+ * Prepare an unsigned Soroban smart contract withdrawal transaction for user's Web3 wallet (Varial).
  *
  * Calls AutopilotVault.withdraw(amount: i128, token_address: Address).
  * The user's wallet must sign this transaction because the contract enforces owner.require_auth().

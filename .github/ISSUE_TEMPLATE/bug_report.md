@@ -33,7 +33,7 @@ assignees: ""
 | Node.js version | e.g. 20.11.0 |
 | Browser | e.g. Chrome 125, Firefox 126 |
 | Stellar Network | ☐ Testnet  ☐ Mainnet |
-| Freighter Wallet version | e.g. 5.8.0 |
+| Varial Wallet version | e.g. 7.0.0 |
 | AutoPilot version / commit | e.g. `a8ea9ff` |
 | Rust / Soroban CLI version (if contract-related) | e.g. `rustc 1.79.0`, `stellar-cli 21.0.0` |
 

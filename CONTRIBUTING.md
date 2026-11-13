@@ -35,7 +35,7 @@ This project adheres to our [Code of Conduct](CODE_OF_CONDUCT.md). By participat
 
 ```
 autopilot/
-├── frontend/         # Next.js 14 app (Freighter wallet, Tailwind CSS)
+├── frontend/         # Next.js 14 app (Varial wallet, Tailwind CSS)
 ├── backend/          # Fastify API + BullMQ engine + Stellar SDK
 │   └── src/
 │       ├── engine/   # Rule processor, Horizon stream, scheduler, queue
@@ -48,7 +48,7 @@ autopilot/
 ```
 
 **Tech Stack:**
-- **Frontend:** Next.js 14, TypeScript, Tailwind CSS, Freighter Wallet API
+- **Frontend:** Next.js 14, TypeScript, Tailwind CSS, Varial Wallet SDK
 - **Backend:** Fastify, TypeScript, PostgreSQL (via `postgres` driver), BullMQ + Redis, Groq AI
 - **Blockchain:** Stellar Network, Soroban Smart Contracts (Rust), Stellar SDK
 - **Infra:** Docker, Render (backend), Vercel (frontend)
@@ -135,7 +135,7 @@ npm run dev
 
 The frontend will be available at `http://localhost:3000`.
 
-> **Note:** Install the [Freighter Wallet](https://www.freighter.app/) browser extension and switch it to **Testnet** mode.
+> **Note:** Install the [Varial Wallet](https://www.varialwallet.com/) browser extension and switch it to **Testnet** mode.
 
 ### 5. Build & Test the Soroban Contract
 

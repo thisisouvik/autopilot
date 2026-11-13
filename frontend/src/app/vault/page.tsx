@@ -20,7 +20,7 @@ import {
   Check,
   ArrowRight,
 } from "lucide-react";
-import { isConnected, signTransaction } from "@stellar/freighter-api";
+import { isConnected, signTransaction } from "@stellar/varial-sdk";
 import DashboardShell from "@/components/DashboardShell";
 import { explorerUrl, ANCHOR_URL, NETWORK_LABEL } from "@/lib/network";
 
@@ -158,10 +158,10 @@ function WithdrawModal({
     setLoading(true);
     setError("");
     try {
-      // 1. Check if Freighter wallet is installed and connected
+      // 1. Check if Varial wallet is installed and connected
       const connectedRes = await isConnected();
       if (!connectedRes?.isConnected) {
-        throw new Error("Freighter wallet is not connected. Please install and unlock the Freighter extension.");
+        throw new Error("Varial wallet is not connected. Please install and unlock the Varial extension.");
       }
 
       // 2. Prepare unsigned Soroban withdrawal transaction from backend
@@ -174,7 +174,7 @@ function WithdrawModal({
       const prepData = await prepRes.json();
       if (!prepRes.ok) throw new Error(prepData.error || "Failed to prepare withdrawal transaction");
 
-      // 3. Prompt user for cryptographic authorization in Freighter
+      // 3. Prompt user for cryptographic authorization in Varial
       const signRes = await signTransaction(prepData.unsignedTxXdr, {
         networkPassphrase: prepData.networkPassphrase,
         address: destKey || userPublicKey,
@@ -182,7 +182,7 @@ function WithdrawModal({
 
       const signedTxXdr = typeof signRes === "string" ? signRes : signRes?.signedTxXdr;
       if (!signedTxXdr) {
-        throw new Error(signRes?.error?.message || "Withdrawal signature was rejected in Freighter.");
+        throw new Error(signRes?.error?.message || "Withdrawal signature was rejected in Varial wallet.");
       }
 
       // 4. Submit the cryptographically signed transaction to the backend
@@ -371,7 +371,7 @@ function WithdrawModal({
 
             <p className="text-[11px] text-white/40 mb-3 flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-              Web3 non-custodial: You will be prompted to sign the Soroban withdrawal in your Freighter wallet.
+              Web3 non-custodial: You will be prompted to sign the Soroban withdrawal in your Varial wallet.
             </p>
 
             {error && (
@@ -396,7 +396,7 @@ function WithdrawModal({
                 className="flex-1 py-2.5 rounded-xl bg-white text-black text-xs font-semibold hover:bg-white/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowDownLeft className="w-3.5 h-3.5" />}
-                {loading ? "Signing with Freighter…" : "Sign & Confirm Withdrawal"}
+                {loading ? "Signing with Varial…" : "Sign & Confirm Withdrawal"}
               </button>
             </div>
 

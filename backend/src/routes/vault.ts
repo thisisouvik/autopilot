@@ -277,8 +277,8 @@ export default async function vaultRoutes(server: FastifyInstance) {
     // Unsigned withdrawals are strictly rejected to prevent session hijacking and Web2 bypass
     return reply.status(400).send({
       error:
-        "Cryptographic authorization required: Vault withdrawals must be signed using your connected Web3 wallet (Freighter). " +
-        "Call /api/vault/:type/withdraw/prepare to prepare the unsigned transaction, sign with Freighter, and submit signedTxXdr.",
+        "Cryptographic authorization required: Vault withdrawals must be signed using your connected Web3 wallet (Varial). " +
+        "Call /api/vault/:type/withdraw/prepare to prepare the unsigned transaction, sign with Varial, and submit signedTxXdr.",
       requiresSignature: true,
     });
   });

@@ -113,7 +113,7 @@ AutoPilot uses a dual-path streaming architecture to guarantee real-time financi
 
 ```mermaid
 flowchart TD
-    User(["User / Freighter Wallet"]) -->|Signs Txs| Frontend["Next.js App"]
+    User(["User / Varial Wallet"]) -->|Signs Txs| Frontend["Next.js App"]
     Frontend -->|REST API| Backend["Fastify Backend"]
     Backend -->|Postgres| DB[("Neon Postgres")]
     
@@ -156,7 +156,7 @@ sequenceDiagram
 
 | Category | Technology | Purpose |
 | :--- | :--- | :--- |
-| **Frontend** | Next.js 14, Tailwind CSS, TypeScript | Fast, responsive UI with Freighter wallet integration |
+| **Frontend** | Next.js 14, Tailwind CSS, TypeScript | Fast, responsive UI with Varial wallet integration |
 | **Backend** | Fastify, Node.js, TypeScript | High-performance API + background rule engine |
 | **Database** | PostgreSQL (Neon) | Stores users, encrypted vault keys, rules, goals |
 | **Blockchain** | Stellar SDK, Horizon API | Account creation, payments, trustlines on Stellar |
@@ -193,7 +193,7 @@ AutoPilot leverages Stellar's native capabilities **and** a Soroban smart contra
 
 ### 1. Onboarding Screen
 ![Onboarding](assets/screenshots/onboarding.png)
-*A seamless Web3 onboarding experience — connect your Freighter wallet to get started.*
+*A seamless Web3 onboarding experience — connect your Varial wallet to get started.*
 
 ### 2. Main Dashboard
 ![Home](assets/screenshots/home.png)
@@ -244,7 +244,7 @@ AutoPilot leverages Stellar's native capabilities **and** a Soroban smart contra
 | Node.js | >= 18 |
 | npm | >= 9 |
 | Rust | stable |
-| [Freighter Wallet](https://www.freighter.app/) | Browser extension (Testnet mode) |
+| [Varial Wallet](https://www.varialwallet.com/) | Browser extension (Testnet mode) |
 
 ### 1. Clone
 
@@ -461,7 +461,7 @@ AutoPilot uses a dual-path streaming architecture to guarantee real-time financi
 
 ```mermaid
 flowchart TD
-    User(["User / Freighter Wallet"]) -->|Signs Txs| Frontend["Next.js App"]
+    User(["User / Varial Wallet"]) -->|Signs Txs| Frontend["Next.js App"]
     Frontend -->|REST API| Backend["Fastify Backend"]
     Backend -->|Postgres| DB[("Neon Postgres")]
     

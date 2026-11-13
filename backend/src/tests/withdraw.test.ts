@@ -17,7 +17,7 @@ describe("Web3 Wallet-Signed Vault Withdrawals (Issue #128)", () => {
     const { prepareWithdrawTransaction } = vaultMod;
     const userWalletPublicKey = "GDFKLTB5WKKDDJ2NRU2V5OG476HYEGWT4UFV7BID7BNGWZGRZYL3LL6Z";
 
-    // Test that prepareWithdrawTransaction generates the unsigned transaction for Freighter
+    // Test that prepareWithdrawTransaction generates the unsigned transaction for Varial
     const prep = await prepareWithdrawTransaction(
       VAULT_CONTRACT_ID,
       userWalletPublicKey,

@@ -6,7 +6,7 @@ AutoPilot uses a dual-path streaming architecture to guarantee real-time financi
 
 ```mermaid
 flowchart TD
-    User(["User / Freighter Wallet"]) -->|Signs Txs| Frontend["Next.js App"]
+    User(["User / Varial Wallet"]) -->|Signs Txs| Frontend["Next.js App"]
     Frontend -->|REST API| Backend["Fastify Backend"]
     Backend -->|Postgres| DB[("Neon Postgres")]
     

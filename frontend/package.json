@@ -15,7 +15,7 @@
     "@prisma/adapter-neon": "6.19.3",
     "@prisma/client": "6.19.3",
     "@prisma/engines": "6.19.3",
-    "@stellar/stellar-sdk": "^17.1.0",
+    "@stellar/stellar-sdk": "^17.4.0",
     "@stellar/varial-sdk": "^7.0.0",
     "@types/ws": "^8.18.1",
     "@vercel/analytics": "^2.0.1",

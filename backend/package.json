@@ -41,7 +41,7 @@
     "@neondatabase/serverless": "^1.2.0",
     "@stellar/stellar-sdk": "^17.4.0",
     "@upstash/redis": "^1.38.0",
-    "bullmq": "^6.4.2",
+    "bullmq": "^6.5.1",
     "dotenv": "^18.0.9",
     "fastify": "^5.12.7",
     "groq-sdk": "^1.6.0",

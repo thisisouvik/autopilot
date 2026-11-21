@@ -498,10 +498,19 @@ function VaultCard({
           </div>
         </div>
 
-        {/* Public Key */}
+        {/* Public Key / Contract ID */}
         <div className="bg-black/20 rounded-xl px-3 py-2 mb-4 flex items-center justify-between">
           <div>
-            <p className="text-[10px] text-white/25 mb-0.5">Stellar Address</p>
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <p className="text-[10px] text-white/25">
+                {vault.publicKey.startsWith("C") ? "Soroban Contract ID" : "Stellar Address"}
+              </p>
+              {vault.publicKey.startsWith("C") && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 font-medium">
+                  Smart Contract
+                </span>
+              )}
+            </div>
             <p className="text-xs font-mono text-white/50">
               {vault.publicKey.slice(0, 10)}…{vault.publicKey.slice(-6)}
             </p>
@@ -512,7 +521,7 @@ function VaultCard({
               target="_blank"
               rel="noopener noreferrer"
               className="text-white/25 hover:text-white/60 transition-colors"
-              title="View on Stellar Expert"
+              title="View on Stellar Expert / Soroban Explorer"
             >
               <ExternalLink className="w-3.5 h-3.5" />
             </a>

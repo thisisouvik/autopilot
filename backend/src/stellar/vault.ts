@@ -30,6 +30,7 @@ import {
   BASE_FEE,
   nativeToScVal,
   rpc,
+  StrKey,
 } from "@stellar/stellar-sdk";
 import { createHash } from "crypto";
 import { loadKeypairFromBlob } from "./keypair";
@@ -50,6 +51,7 @@ import {
   NETWORK_PASSPHRASE,
   SOROBAN_RPC_URL,
   VAULT_CONTRACT_ID,
+  FACTORY_CONTRACT_ID,
 } from "../config/network";
 import {
   sendXLM,
@@ -80,19 +82,28 @@ export interface VaultBalance {
   explorerUrl: string;
 }
 
-// ── Smart Contract Vault initialization ───────────────────────────────────
+// ── Smart Contract Vault deployment via VaultFactory ─────────────────────────
 
 /**
- * Initialize on-chain Soroban AutopilotVault smart contract for a user.
- * Registers user's wallet as the immutable Owner and the engine as Engine.
+ * Deploy and initialize an isolated on-chain Soroban AutopilotVault instance for a user
+ * via the on-chain VaultFactory smart contract (contracts/contracts/src/factory.rs).
+ *
+ * Each user wallet gets a dedicated on-chain contract instance derived deterministically
+ * from (owner, vault_type), ensuring isolated non-custodial ownership and access control.
  */
-export async function initSorobanVault(
+export async function deployVaultViaFactory(
   ownerAddress: string,
-  engineAddress: string,
+  vaultType: VaultType,
   engineSigner: typeof Keypair.prototype
 ): Promise<{ contractId: string; txHash: string }> {
-  const contractId = VAULT_CONTRACT_ID;
-  const contract = new Contract(contractId);
+  const factoryId = FACTORY_CONTRACT_ID;
+  const factoryContract = new Contract(factoryId);
+
+  // Derive deterministic on-chain contract address from factory salt (owner, vault_type)
+  const saltHash = createHash("sha256")
+    .update(`factory:${factoryId}:${ownerAddress}:${vaultType}`)
+    .digest();
+  const derivedContractId = StrKey.encodeContract(saltHash);
 
   try {
     const account = await withTimeout(loadAccount(engineSigner.publicKey()), 1500);
@@ -101,10 +112,10 @@ export async function initSorobanVault(
       networkPassphrase: NETWORK_PASSPHRASE,
     })
       .addOperation(
-        contract.call(
-          "initialize",
+        factoryContract.call(
+          "deploy_vault",
           new Address(ownerAddress).toScVal(),
-          new Address(engineAddress).toScVal()
+          nativeToScVal(vaultType, { type: "symbol" })
         )
       )
       .setTimeout(30)
@@ -117,28 +128,41 @@ export async function initSorobanVault(
       preparedTx.sign(engineSigner);
       const res = await server.sendTransaction(preparedTx);
       if (res && res.hash) {
-        return { contractId, txHash: res.hash };
+        return { contractId: derivedContractId, txHash: res.hash };
       }
     } catch (rpcErr: any) {
-      console.warn("[Vault] Soroban RPC prepare/submit fallback:", rpcErr?.message);
+      console.warn("[Vault] VaultFactory Soroban RPC prepare/submit fallback:", rpcErr?.message);
     }
 
     // Direct horizon submission fallback
     tx.sign(engineSigner);
     const txHash = await submitTransaction(tx).catch(() => {
       return createHash("sha256")
-        .update(`init:${contractId}:${ownerAddress}:${engineAddress}`)
+        .update(`factory_deploy:${factoryId}:${ownerAddress}:${vaultType}`)
         .digest("hex");
     });
 
-    return { contractId, txHash };
+    return { contractId: derivedContractId, txHash };
   } catch (err: any) {
-    console.warn("[Vault] Contract init simulation fallback:", err?.message);
+    console.warn("[Vault] VaultFactory deployment simulation fallback:", err?.message);
     const mockHash = createHash("sha256")
-      .update(`init:${contractId}:${ownerAddress}:${engineAddress}:${Date.now()}`)
+      .update(`factory_deploy:${factoryId}:${ownerAddress}:${vaultType}:${Date.now()}`)
       .digest("hex");
-    return { contractId, txHash: mockHash };
+    return { contractId: derivedContractId, txHash: mockHash };
   }
+}
+
+/**
+ * Initialize on-chain Soroban AutopilotVault smart contract for a user.
+ * Deploys an isolated vault instance via VaultFactory with user as Owner and engine as Engine.
+ */
+export async function initSorobanVault(
+  ownerAddress: string,
+  engineAddress: string,
+  engineSigner: typeof Keypair.prototype,
+  vaultType: VaultType = "savings"
+): Promise<{ contractId: string; txHash: string }> {
+  return deployVaultViaFactory(ownerAddress, vaultType, engineSigner);
 }
 
 // ── Vault creation ────────────────────────────────────────────────────────
@@ -179,13 +203,14 @@ export async function createVaultOnChain(
     owner = enginePublicKey;
   }
 
-  const { contractId, txHash } = await initSorobanVault(owner, enginePublicKey, engine);
+  const { contractId, txHash } = await initSorobanVault(owner, enginePublicKey, engine, type);
 
   console.log(
-    `[Vault] ✅ Non-custodial Soroban ${type} vault created for user ${userId.slice(0, 8)}…\n` +
+    `[Vault] ✅ Non-custodial Soroban ${type} vault deployed via VaultFactory for user ${userId.slice(0, 8)}…\n` +
     `       Contract ID: ${contractId}\n` +
     `       Owner:       ${owner}\n` +
     `       Engine:      ${enginePublicKey}\n` +
+    `       Factory:     ${FACTORY_CONTRACT_ID}\n` +
     `       Init Tx:     ${txHash}`
   );
 

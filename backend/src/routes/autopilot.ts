@@ -2,12 +2,10 @@
 import { FastifyInstance } from "fastify";
 import { verifyAuth } from "../middleware/auth";
 import { getDb } from "../lib/db";
-import { fetchRecentPayments, executeRuleTransaction, claimPayment } from "../lib/engine";
-import { doesPaymentMatchTrigger } from "../lib/paymentTrigger";
+import { fetchRecentPayments } from "../lib/engine";
+import { processPaymentDirect } from "../engine/processor";
 import { getHorizon } from "../stellar/horizon";
-import { buildPage, parseDateRange, parsePagination, readConfiguredLimit } from "../lib/pagination";
-
-const DEFAULT_MAX_RULES_PER_USER = 20;
+import { buildPage, parseDateRange, parsePagination } from "../lib/pagination";
 
 export default async function autopilotRoutes(server: FastifyInstance) {
   
@@ -57,138 +55,69 @@ export default async function autopilotRoutes(server: FastifyInstance) {
     });
   });
 
-  // Monitor endpoint (called by worker, uses secret)
+  // Monitor endpoint (supports both background worker with engine secret and authenticated user session)
   server.post("/monitor", async (request: any, reply: any) => {
-    const ENGINE_SECRET = process.env.ENGINE_SECRET ?? process.env.JWT_SECRET!;
+    const ENGINE_SECRET = process.env.ENGINE_SECRET ?? process.env.JWT_SECRET;
     const authHeader = request.headers["x-engine-secret"];
-    
-    if (authHeader !== ENGINE_SECRET) {
-      return reply.status(401).send({ error: "Unauthorized" });
+    const isEngineSecret = Boolean(ENGINE_SECRET && authHeader === ENGINE_SECRET);
+
+    let targetUserId: string | null = null;
+
+    if (!isEngineSecret) {
+      try {
+        await request.jwtVerify();
+        targetUserId = request.user?.id ?? null;
+      } catch {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+
+      if (!targetUserId) {
+        return reply.status(401).send({ error: "Unauthorized: Missing user session" });
+      }
+    } else if (request.body?.userId) {
+      targetUserId = request.body.userId;
     }
 
     const sql = getDb();
-    const maxRules = readConfiguredLimit("MAX_RULES_PER_USER", DEFAULT_MAX_RULES_PER_USER);
 
     try {
+      // Tenant isolation: if triggered by user session, only process that user's rules
       const users = await sql`
         SELECT DISTINCT u.id, u."publicKey", u."dailyLimit", u."weeklyLimit"
         FROM "User" u
         INNER JOIN "Rule" r ON r."userId" = u.id
         WHERE r.status = 'active'
+          AND (${targetUserId}::uuid IS NULL OR u.id = ${targetUserId}::uuid)
       `;
 
       const results: any[] = [];
+      let totalExecuted = 0;
 
       for (const user of users) {
-        const rules = await sql`
-          SELECT * FROM "Rule"
-          WHERE "userId" = ${user.id}::uuid
-            AND status = 'active'
-          ORDER BY "createdAt" DESC
-          LIMIT ${maxRules}
-        `;
-
-        const now = new Date();
-        const startOfDay  = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-        const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-
-        const [daySpend, weekSpend] = await Promise.all([
-          sql`SELECT COALESCE(SUM(amount), 0) AS total FROM "AutomatedTransaction" WHERE "userId" = ${user.id}::uuid AND "createdAt" >= ${startOfDay}`,
-          sql`SELECT COALESCE(SUM(amount), 0) AS total FROM "AutomatedTransaction" WHERE "userId" = ${user.id}::uuid AND "createdAt" >= ${startOfWeek}`,
-        ]);
-
-        let spentToday  = parseFloat(daySpend[0]?.total  ?? "0");
-        let spentWeek   = parseFloat(weekSpend[0]?.total ?? "0");
-        const dailyLimit  = user.dailyLimit  ? parseFloat(user.dailyLimit)  : null;
-        const weeklyLimit = user.weeklyLimit ? parseFloat(user.weeklyLimit) : null;
-
         const payments = await fetchRecentPayments(user.publicKey, 10);
 
         for (const payment of payments) {
-          const paymentAmount = parseFloat(payment.amount);
-          const assetCode = (payment.asset || "XLM").trim().toUpperCase().split(":", 1)[0];
-          let paymentClaimed = false;
+          const outcome = await processPaymentDirect({
+            userId: user.id,
+            publicKey: user.publicKey,
+            paymentHorizonId: payment.id,
+            amount: payment.amount,
+            asset: payment.asset || "XLM",
+            from: payment.from,
+            timestamp: payment.createdAt || new Date().toISOString(),
+          });
 
-          for (const rule of rules) {
-            const matches = doesPaymentMatchRule(payment, rule as any);
-            if (!matches || !assetCode) continue;
-
-            const execAmount = rule.isPercentage
-              ? (rule.amount / 100) * paymentAmount
-              : rule.amount;
-
-            if (execAmount <= 0.0000001) continue;
-            if (execAmount > paymentAmount) continue;
-
-            const execAmountStr = execAmount.toFixed(7);
-
-            if (dailyLimit !== null && spentToday + execAmount > dailyLimit) {
-              console.log(`[Engine] ⚠ Daily limit reached for ${user.publicKey.slice(0, 8)}… (${spentToday.toFixed(2)} / ${dailyLimit} XLM today)`);
-              continue;
-            }
-            if (weeklyLimit !== null && spentWeek + execAmount > weeklyLimit) {
-              console.log(`[Engine] ⚠ Weekly limit reached for ${user.publicKey.slice(0, 8)}…`);
-              continue;
-            }
-
-            if (!paymentClaimed) {
-              paymentClaimed = await claimPayment(payment.id, user.id, sql);
-              if (!paymentClaimed) break;
-            }
-
-            const destination = process.env.AUTOPILOT_PUBLIC_KEY!;
-            const memo = rule.memo ?? `AutoPilot: ${rule.action} ${execAmountStr} ${assetCode}`;
-
-            try {
-              const txHash = await executeRuleTransaction(destination, execAmountStr, memo, assetCode);
-
-              await sql`
-                INSERT INTO "AutomatedTransaction" (
-                  id, "userId", "ruleId", amount, type, asset, memo, "txHash", "createdAt"
-                )
-                VALUES (
-                  gen_random_uuid(),
-                  ${user.id}::uuid,
-                  ${rule.id}::uuid,
-                  ${execAmount},
-                  ${rule.action.toLowerCase()},
-                  ${assetCode},
-                  ${memo},
-                  ${txHash},
-                  NOW()
-                )
-              `;
-
+          if (outcome.results && outcome.results.length > 0) {
+            for (const r of outcome.results) {
               results.push({
                 userId: user.id,
                 publicKey: user.publicKey,
-                ruleId: rule.id,
-                ruleAction: rule.action,
-                amount: execAmountStr,
-                txHash,
                 paymentId: payment.id,
-                status: "executed",
+                ...r,
               });
-
-              spentToday += execAmount;
-              spentWeek  += execAmount;
-
-              console.log(
-                `[Engine] ✓ Rule "${rule.action}" executed for ${user.publicKey.slice(0, 8)}… | ${execAmountStr} XLM | tx: ${txHash.slice(0, 16)}…`
-              );
-            } catch (execErr: any) {
-              console.error(`[Engine] ✗ Rule execution failed:`, execErr?.message ?? execErr);
-              results.push({
-                userId: user.id,
-                publicKey: user.publicKey,
-                ruleId: rule.id,
-                ruleAction: rule.action,
-                amount: execAmountStr,
-                txHash: null,
-                paymentId: payment.id,
-                status: "failed",
-                error: execErr?.message,
-              });
+              if (r.status === "executed") {
+                totalExecuted++;
+              }
             }
           }
         }
@@ -196,7 +125,7 @@ export default async function autopilotRoutes(server: FastifyInstance) {
 
       return reply.send({
         ok: true,
-        processed: results.length,
+        processed: totalExecuted,
         usersChecked: users.length,
         results,
       });
@@ -211,15 +140,6 @@ export default async function autopilotRoutes(server: FastifyInstance) {
     if (process.env.NODE_ENV !== "development") {
       return reply.status(403).send({ error: "Not allowed" });
     }
-    // internal forward logic isn't easily mapped in fastify for GET->POST without plugin
-    // for dev, we can just reject or extract the logic to a shared function
     return reply.status(405).send({ error: "Use POST" });
   });
-}
-
-function doesPaymentMatchRule(
-  payment: { amount: string; asset: string; from: string },
-  rule: { trigger: string; action: string }
-): boolean {
-  return doesPaymentMatchTrigger(rule.trigger, payment.asset);
 }

@@ -25,7 +25,7 @@
     "lucide-react": "^1.64.0",
     "motion-dom": "^14.8.0",
     "motion-utils": "^14.6.0",
-    "next": "^16.4.3",
+    "next": "^16.4.6",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "ws": "^8.21.3"
@@ -36,7 +36,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.4.3",
+    "eslint-config-next": "^16.4.6",
     "prisma": "6.19.3",
     "tailwindcss": "^4",
     "typescript": "^5"

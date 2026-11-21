@@ -73,7 +73,9 @@ export default function EngineStatusPanel() {
 
   const fetchStatus = useCallback(async () => {
     try {
-      const res = await fetch("/api/autopilot/status");
+      const res = await fetch("/api/autopilot/status", {
+        credentials: "include",
+      });
       if (res.ok) {
         const data = await res.json();
         // Guard: ensure recentTransactions is always an array
@@ -95,13 +97,18 @@ export default function EngineStatusPanel() {
   const triggerNow = async () => {
     setTriggering(true);
     try {
-      const res = await fetch("/api/autopilot/monitor", { method: "POST" });
-      const data = await res.json();
-      setLastTrigger({
-        count: data.processed ?? 0,
-        ts: new Date().toLocaleTimeString(),
+      const res = await fetch("/api/autopilot/monitor", {
+        method: "POST",
+        credentials: "include",
       });
-      await fetchStatus();
+      if (res.ok) {
+        const data = await res.json();
+        setLastTrigger({
+          count: data.processed ?? 0,
+          ts: new Date().toLocaleTimeString(),
+        });
+        await fetchStatus();
+      }
     } catch {}
     setTriggering(false);
   };

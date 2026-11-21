@@ -58,6 +58,14 @@ const DEFAULT_VAULT_CONTRACT_IDS = {
 } as const;
 
 /**
+ * Default deployed VaultFactory smart contract ID on testnet.
+ */
+const DEFAULT_FACTORY_CONTRACT_IDS = {
+  testnet: "CDDS2SVBJQY3XBGSXVMEOJGXVGNNJ3STBSAK34QFLEVXM4MQ2QVLF6N3",
+  mainnet: "",
+} as const;
+
+/**
  * stellar.expert path segment for each network. Note the asymmetry: the
  * explorer calls mainnet "public", not "mainnet" — a routine source of broken
  * links when these URLs are built ad hoc.
@@ -113,6 +121,10 @@ export const SOROBAN_RPC_URL: string =
 /** Deployed Soroban AutopilotVault smart contract ID. */
 export const VAULT_CONTRACT_ID: string =
   process.env.VAULT_CONTRACT_ID ?? DEFAULT_VAULT_CONTRACT_IDS[STELLAR_NETWORK];
+
+/** Deployed Soroban VaultFactory smart contract ID. */
+export const FACTORY_CONTRACT_ID: string =
+  process.env.FACTORY_CONTRACT_ID ?? DEFAULT_FACTORY_CONTRACT_IDS[STELLAR_NETWORK];
 
 export const NETWORK_PASSPHRASE: string = PASSPHRASE[STELLAR_NETWORK];
 

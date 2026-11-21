@@ -63,8 +63,17 @@ export const ANCHOR_URL: string | null = ANCHOR_URLS[STELLAR_NETWORK];
 /** Network name for user-facing copy. */
 export const NETWORK_LABEL: string = STELLAR_NETWORK;
 
+/** Default deployed VaultFactory smart contract ID on testnet. */
+const DEFAULT_FACTORY_CONTRACT_IDS = {
+  testnet: "CDDS2SVBJQY3XBGSXVMEOJGXVGNNJ3STBSAK34QFLEVXM4MQ2QVLF6N3",
+  mainnet: "",
+} as const;
+
+export const FACTORY_CONTRACT_ID: string =
+  process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ID ?? DEFAULT_FACTORY_CONTRACT_IDS[STELLAR_NETWORK];
+
 /** Build an explorer URL so the network segment is never wrong. */
-export function explorerUrl(type: "tx" | "account" | "ledger", id: string): string {
+export function explorerUrl(type: "tx" | "account" | "ledger" | "contract", id: string): string {
   return `${EXPLORER_BASE_URL}/${type}/${id}`;
 }
 

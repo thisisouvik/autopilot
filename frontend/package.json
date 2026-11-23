@@ -17,7 +17,7 @@
     "@prisma/engines": "6.19.3",
     "@stellar/stellar-sdk": "^17.4.0",
     "@stellar/varial-sdk": "^7.0.0",
-    "@types/ws": "^8.18.1",
+    "@types/ws": "^8.18.2",
     "@vercel/analytics": "^2.0.1",
     "framer-motion": "^14.12.0",
     "geist": "^1.7.2",
@@ -28,7 +28,7 @@
     "next": "^16.4.6",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "ws": "^8.21.3"
+    "ws": "^8.23.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
